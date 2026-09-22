@@ -1,0 +1,36 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50  # Hz
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: ["left_wheel_hinge"]
+    right_wheel_names: ["right_wheel_hinge"]
+
+    wheel_separation: 0.26  # distância entre as rodas (2 * 0.13)
+    wheel_radius: 0.1       # raio do cilindro da roda
+
+    base_frame_id: chassis
+    odom_frame_id: odom
+    publish_rate: 50.0
+    enable_odom_tf: true
+    pose_covariance_diagonal: [0.001, 0.001, 0.0, 0.0, 0.0, 0.01]
+    twist_covariance_diagonal: [0.001, 0.0, 0.0, 0.0, 0.0, 0.01]
+
+    use_stamped_vel: false  # escuta Twist em ~/cmd_vel_unstamped
+    cmd_vel_timeout: 0.5    # para o robô se não chegar comando em 0.5 s
+
+    # Limites de velocidade (min_* não definido assume -max_*)
+    linear.x.has_velocity_limits: true
+    linear.x.max_velocity: 1.0
+    linear.x.min_velocity: -1.0
+    angular.z.has_velocity_limits: true
+    angular.z.max_velocity: 2.0
+    angular.z.min_velocity: -2.0

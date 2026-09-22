@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="my_robot">
+<robot name="my_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <link name="chassis">
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -113,6 +113,38 @@
 
   <gazebo>
     <static>false</static>
+  </gazebo>
+
+  <!-- ros2_control - as rodas recebem comando de velocidade e informam posicao e velocidade -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+
+    <joint name="left_wheel_hinge">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="right_wheel_hinge">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <!-- Plugin que sobe o controller_manager dentro do Gazebo -->
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>$(find controle_movimento)/config/controllers.yaml</parameters>
+    </plugin>
   </gazebo>
 
 </robot>
