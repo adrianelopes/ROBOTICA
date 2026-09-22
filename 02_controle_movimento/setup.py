@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'model_description'
+package_name = 'controle_movimento'
 
 
 def package_files(directory):
@@ -26,9 +26,9 @@ setup(
     ] + package_files('models'),
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='fernanda',
-    maintainer_email='fernanda@todo.todo',
-    description='TODO: Package description',
+    maintainer='Fernanda, Renan, Adriane',
+    maintainer_email='todos@todo.todo',
+    description='TODO: Controle Movimento',
     license='Apache-2.0',
     extras_require={
         'test': [

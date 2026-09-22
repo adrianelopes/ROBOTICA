@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>model_description</name>
+  <name>controle_movimento</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="fernanda@todo.todo">fernanda</maintainer>
+  <description>TODO: Controle de movimento</description>
+  <maintainer email="todos@todo.todo">Fernanda, Renan e Adriane</maintainer>
   <license>Apache-2.0</license>
 
   <test_depend>ament_copyright</test_depend>

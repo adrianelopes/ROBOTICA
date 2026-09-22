@@ -8,8 +8,8 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('model_description')
-    model_sdf = os.path.join(pkg_share, 'models', 'my_robot', 'model.sdf')
+    pkg_share = get_package_share_directory('controle_movimento')
+    model_urdf = os.path.join(pkg_share, 'models', 'my_robot', 'model.urdf')
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -24,7 +24,7 @@ def generate_launch_description():
         executable='spawn_entity.py',
         output='screen',
         arguments=[
-            '-file', model_sdf,
+            '-file', model_urdf,
             '-entity', 'my_robot',
             '-x', '0.0', '-y', '0.0', '-z', '0.1',
         ],

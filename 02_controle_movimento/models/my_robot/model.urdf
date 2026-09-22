@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<robot name="my_robot">
+  <link name="chassis">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.004167" ixy="0.0" ixz="0.0"
+               iyy="0.014167" iyz="0.0"
+               izz="0.016667"/>
+    </inertial>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.4 0.2 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="model://my_robot/meshes/chassis.dae" scale="0.9 0.5 0.5"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="-0.15 0 -0.05" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="-0.15 0 -0.05" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="left_wheel">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.001354" ixy="0.0" ixz="0.0"
+               iyy="0.001354" iyz="0.0"
+               izz="0.0025"/>
+    </inertial>
+
+    <collision>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="right_wheel">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia ixx="0.001354" ixy="0.0" ixz="0.0"
+               iyy="0.001354" iyz="0.0"
+               izz="0.0025"/>
+    </inertial>
+
+    <collision>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="left_wheel_hinge" type="continuous">
+    <parent link="chassis"/>
+    <child link="left_wheel"/>
+    <origin xyz="0.1 0.13 0" rpy="0 1.5707 1.5707"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <joint name="right_wheel_hinge" type="continuous">
+    <parent link="chassis"/>
+    <child link="right_wheel"/>
+    <origin xyz="0.1 -0.13 0" rpy="0 1.5707 1.5707"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  
+  <gazebo reference="chassis">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+
+  <gazebo reference="left_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+
+  <gazebo>
+    <static>false</static>
+  </gazebo>
+
+</robot>
