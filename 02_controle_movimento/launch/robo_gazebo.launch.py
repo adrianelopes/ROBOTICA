@@ -61,7 +61,8 @@ def generate_launch_description():
     )
 
     teleop_keyboard = ExecuteProcess(
-        cmd=['xterm', '-e', 'ros2', 'run', 'teleop_twist_keyboard', 'teleop_twist_keyboard'],
+        cmd=['gnome-terminal', '--wait', '--',
+             'ros2', 'run', 'teleop_twist_keyboard', 'teleop_twist_keyboard'],
         output='screen',
     )
 
