@@ -18,6 +18,8 @@ ros2 launch controle_movimento robo_gazebo.launch.py
 
 ## Testar
 
+sudo apt install xterm
+
 Em outro terminal (lembre de rodar `source ~/ros2_ws/install/setup.bash`):
 
 ### 1. Conferir os controladores

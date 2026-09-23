@@ -86,6 +86,7 @@
     <child link="left_wheel"/>
     <origin xyz="0.1 0.13 0" rpy="0 1.5707 1.5707"/>
     <axis xyz="0 0 1"/>
+    <dynamics damping="0.05" friction="0.02"/>
   </joint>
 
   <joint name="right_wheel_hinge" type="continuous">
@@ -93,8 +94,8 @@
     <child link="right_wheel"/>
     <origin xyz="0.1 -0.13 0" rpy="0 1.5707 1.5707"/>
     <axis xyz="0 0 1"/>
+    <dynamics damping="0.05" friction="0.02"/>
   </joint>
-
   
   <gazebo reference="chassis">
     <mu1>0.0</mu1>
@@ -115,26 +116,29 @@
     <static>false</static>
   </gazebo>
 
-  <!-- ros2_control - as rodas recebem comando de velocidade e informam posicao e velocidade -->
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
       <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
 
     <joint name="left_wheel_hinge">
-      <command_interface name="velocity">
-        <param name="min">-10</param>
-        <param name="max">10</param>
-      </command_interface>
+      <param name="vel_kp">1.0</param>
+      <param name="vel_ki">0.5</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">10</param>
+
+      <command_interface name="velocity_pid"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
 
     <joint name="right_wheel_hinge">
-      <command_interface name="velocity">
-        <param name="min">-10</param>
-        <param name="max">10</param>
-      </command_interface>
+      <param name="vel_kp">1.0</param>
+      <param name="vel_ki">0.5</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">10</param>
+
+      <command_interface name="velocity_pid"/>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
@@ -144,6 +148,9 @@
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
       <parameters>$(find controle_movimento)/config/controllers.yaml</parameters>
+      <ros>
+        <remapping>diff_drive_controller/odom:=odom</remapping>
+      </ros>
     </plugin>
   </gazebo>
 

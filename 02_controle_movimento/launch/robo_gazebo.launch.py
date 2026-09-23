@@ -2,7 +2,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, ExecuteProcess
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -60,6 +60,11 @@ def generate_launch_description():
         output='screen',
     )
 
+    teleop_keyboard = ExecuteProcess(
+        cmd=['xterm', '-e', 'ros2', 'run', 'teleop_twist_keyboard', 'teleop_twist_keyboard'],
+        output='screen',
+    )
+
     # Os controladores só são ativados depois que o robô existe no Gazebo
     start_controllers = RegisterEventHandler(
         OnProcessExit(
@@ -74,4 +79,5 @@ def generate_launch_description():
         spawn_entity,
         start_controllers,
         cmd_vel_relay,
+        teleop_keyboard,
     ])

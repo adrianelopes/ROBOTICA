@@ -27,10 +27,16 @@ diff_drive_controller:
     use_stamped_vel: false  # escuta Twist em ~/cmd_vel_unstamped
     cmd_vel_timeout: 0.5    # para o robô se não chegar comando em 0.5 s
 
-    # Limites de velocidade (min_* não definido assume -max_*)
     linear.x.has_velocity_limits: true
     linear.x.max_velocity: 1.0
     linear.x.min_velocity: -1.0
+    linear.x.has_acceleration_limits: true
+    linear.x.max_acceleration: 0.8
+    linear.x.min_acceleration: -0.8
+
     angular.z.has_velocity_limits: true
     angular.z.max_velocity: 2.0
     angular.z.min_velocity: -2.0
+    angular.z.has_acceleration_limits: true
+    angular.z.max_acceleration: 1.5
+    angular.z.min_acceleration: -1.5
