@@ -16,4 +16,4 @@ source install/setup.bash
 ros2 launch controle_trajetoria robo_gazebo.launch.py
 ```
 
-O robô recebe comandos pelo `/cmd_vel` e publica a odometria em `/diff_drive_controller/odom`.
+O robô recebe comandos pelo `/cmd_vel` e publica a odometria em `/odom`.

@@ -6,7 +6,6 @@ package_name = 'controle_trajetoria'
 
 
 def package_files(directory):
-    """Map each subdirectory of `directory` to its install path in share/."""
     return [
         (os.path.join('share', package_name, path),
          [os.path.join(path, f) for f in files])
@@ -39,6 +38,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cmd_vel_relay = controle_trajetoria.cmd_vel_relay:main',
+            'controle_pose_manobras = controle_trajetoria.controle_pose_manobras:main',
         ],
     },
 )
