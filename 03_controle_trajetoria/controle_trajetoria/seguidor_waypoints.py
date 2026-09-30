@@ -133,7 +133,7 @@ class SeguidorWaypoints(Node):
         return waypoints
 
     def _abrir_registro(self, caminho):
-        """Abre o CSV da missão (usado por comparar_missoes)."""
+        #Abre o CSV da missão (usado por comparar_missoes)
         caminho = os.path.expanduser(caminho)
         pasta = os.path.dirname(caminho)
         if pasta:

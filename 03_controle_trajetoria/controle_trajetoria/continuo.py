@@ -10,12 +10,11 @@ from simple_pid import PID
 
 
 def normalize_angle(angle):
-    """Leva um ângulo para o intervalo [-pi, pi]."""
     return math.atan2(math.sin(angle), math.cos(angle))
 
 
 def clamp(value, limit):
-    """Limita value ao intervalo [-limit, limit]."""
+    #Limita value ao intervalo [-limit, limit]
     return max(-limit, min(limit, value))
 
 
@@ -43,12 +42,9 @@ class PoseController:
         self.aligning = False  
 
     def _make_pid(self, gains, limit):
-        """Cria um PID com os ganhos (kp, ki, kd).
+        
 
-        A biblioteca calcula (setpoint - entrada). Usamos setpoint 0 e
-        passamos o NEGATIVO do erro, então a saída é Kp*e + Ki*int(e) + Kd*de/dt.
-        sample_time=None: o dt é fornecido por nós (relógio do ROS/simulação).
-        """
+        #A biblioteca calcula (setpoint - entrada).     
         kp, ki, kd = gains
         return PID(kp, ki, kd, setpoint=0.0, sample_time=None,
                    output_limits=(-limit, limit))
@@ -76,7 +72,6 @@ class PoseController:
 
 
     def compute_command(self, pose, goal, dt):
-        """Retorna (v, w) a partir da pose atual, da desejada e do dt."""
         x, y, yaw = pose
         xd, yd, yaw_d = goal
 

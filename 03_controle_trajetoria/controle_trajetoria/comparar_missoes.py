@@ -20,7 +20,6 @@ def normalizar(angulo):
 
 
 def distancia_ao_segmento(px, py, ax, ay, bx, by):
-    """Menor distância do ponto P ao segmento AB."""
     dx, dy = bx - ax, by - ay
     comprimento2 = dx * dx + dy * dy
     if comprimento2 == 0.0:
@@ -165,7 +164,6 @@ def tabelas_markdown(missoes, metricas):
 
 
 def avisos(missoes):
-    """Alerta se as condições dos experimentos não são comparáveis."""
     saida = []
     for rotulo, chaves in (('velocidade linear', CHAVES_V),
                            ('velocidade angular', CHAVES_W)):
