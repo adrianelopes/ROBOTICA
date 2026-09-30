@@ -1,0 +1,44 @@
+# Bytecode e cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Empacotamento (setup.py / setuptools)
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+wheels/
+
+# Saídas do colcon (caso o pacote seja compilado dentro desta pasta)
+install/
+log/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Linters / type checkers
+.mypy_cache/
+.ruff_cache/
+
+# Editores e sistema
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Gazebo / ROS
+*.bag
+*.db3
+*.mcap
