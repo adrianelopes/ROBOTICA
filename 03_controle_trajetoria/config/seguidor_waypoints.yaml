@@ -37,6 +37,7 @@ seguidor_waypoints:
       max_angular_vel: 1.0       
       position_tolerance: 0.03   
       yaw_tolerance: 0.05        
+      raio_aceitacao: 0.25       # m: waypoints intermediários contam ao entrar neste raio (sem parar)
       alignment_hysteresis: 2.0  
 
     manobras:

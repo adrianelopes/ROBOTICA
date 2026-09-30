@@ -128,7 +128,7 @@ class SeguidorWaypoints(Node):
                 raise ValueError(
                     f"Waypoint '{nome}' precisa de x e y numéricos "
                     '(theta opcional, em rad).')
-            theta = math.atan2(math.sin(theta), math.cos(theta))
+            theta = (theta + math.pi) % (2.0 * math.pi) - math.pi  # wrap
             waypoints.append((nome, Pose2D(float(x), float(y), theta)))
         return waypoints
 
@@ -169,7 +169,8 @@ class SeguidorWaypoints(Node):
     def _ir_para(self, indice):
         self.indice = indice
         nome, pose = self.waypoints[indice]
-        self.controlador.definir_objetivo(pose)
+        ultimo = indice == len(self.waypoints) - 1 and not self.repetir
+        self.controlador.definir_objetivo(pose, ultimo=ultimo)
         self.get_logger().info(
             f'-> Waypoint {indice + 1}/{len(self.waypoints)} ({nome}): {pose}')
 
@@ -212,7 +213,10 @@ class SeguidorWaypoints(Node):
         self.publicar(v, w)
         chegou = self.controlador.chegou
         if not self.concluido:
-            self._registrar(agora, v, w, 'chegada' if chegou else '')
+            # 'passagem': entrou no raio de aceitação (sem exigir a orientação)
+            tipo = 'passagem' if getattr(self.controlador, 'passagem', False) \
+                else 'chegada'
+            self._registrar(agora, v, w, tipo if chegou else '')
         if chegou:
             self._ao_chegar()
 

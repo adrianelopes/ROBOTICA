@@ -3,7 +3,8 @@ import math
 
 
 def normalizar_angulo(angulo):
-    return math.atan2(math.sin(angulo), math.cos(angulo))
+    # wrap: soma 180°, tira o resto da divisão por 360° e subtrai 180°
+    return (angulo + math.pi) % (2.0 * math.pi) - math.pi
 
 
 def saturar(valor, limite):
@@ -34,7 +35,8 @@ class ControlePose:
 
     # Interface usada pelo seguidor_waypoints
 
-    def definir_objetivo(self, goal):
+    def definir_objetivo(self, goal, ultimo=True):
+        # 'ultimo' existe só para manter a mesma interface do contínuo (não é usado)
         self.x_d, self.y_d, self.theta_d = goal
         self.estado = self.ROTACAO_INICIAL
         self.logger.info(

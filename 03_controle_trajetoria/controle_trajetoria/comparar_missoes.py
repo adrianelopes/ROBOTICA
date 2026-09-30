@@ -16,7 +16,8 @@ LIMIAR_GIRO = 0.05
 
 
 def normalizar(angulo):
-    return math.atan2(math.sin(angulo), math.cos(angulo))
+    # wrap: soma 180°, tira o resto da divisão por 360° e subtrai 180°
+    return (angulo + math.pi) % (2.0 * math.pi) - math.pi
 
 
 def distancia_ao_segmento(px, py, ax, ay, bx, by):
@@ -66,7 +67,7 @@ class Missao:
 
     def calcular_metricas(self):
         L = self.linhas
-        distancia = rotacao = t_girando = t_parado_zero = 0.0
+        distancia = rotacao = t_girando = 0.0
         soma_v2 = soma_w2 = 0.0
         for a, b in zip(L, L[1:]):
             dt = b['t'] - a['t']
@@ -89,16 +90,26 @@ class Missao:
             desvio = max(
                 distancia_ao_segmento(p['x'], p['y'], ax, ay, wx, wy)
                 for p in L[inicio_idx:i_chegada + 1])
+            # 'passagem' = só entrou no raio de aceitação: não há erro de
+            # chegada para comparar (a pose completa não foi exigida)
+            completa = l['evento'] == 'chegada'
             por_wp.append({
                 'nome': nome,
+                'tipo': l['evento'],
                 'tempo': l['t'] - inicio_t,
-                'erro_pos': math.hypot(l['x'] - wx, l['y'] - wy),
-                'erro_ang': math.degrees(abs(normalizar(l['yaw'] - wth))),
+                'erro_pos': (math.hypot(l['x'] - wx, l['y'] - wy)
+                             if completa else None),
+                'erro_ang': (math.degrees(abs(normalizar(l['yaw'] - wth)))
+                             if completa else None),
                 'desvio': desvio})
             inicio_idx, inicio_t = i_chegada, l['t']
 
         concluiu = len(chegadas) == len(self.ordem) and len(chegadas) > 0
         tempo_total = chegadas[-1][1]['t'] - L[0]['t'] if chegadas else duracao
+
+        def media(chave):
+            valores = [w[chave] for w in por_wp if w[chave] is not None]
+            return sum(valores) / len(valores) if valores else float('nan')
         return {
             'concluiu': concluiu,
             'tempo_total': tempo_total,
@@ -107,12 +118,11 @@ class Missao:
             't_girando': t_girando,
             'v_rms': math.sqrt(soma_v2 / duracao) if duracao else 0.0,
             'w_rms': math.sqrt(soma_w2 / duracao) if duracao else 0.0,
-            'erro_pos_medio': (sum(w['erro_pos'] for w in por_wp) / len(por_wp)
-                               if por_wp else float('nan')),
-            'erro_ang_medio': (sum(w['erro_ang'] for w in por_wp) / len(por_wp)
-                               if por_wp else float('nan')),
-            'desvio_medio': (sum(w['desvio'] for w in por_wp) / len(por_wp)
-                             if por_wp else float('nan')),
+            'erro_pos_medio': media('erro_pos'),
+            'erro_ang_medio': media('erro_ang'),
+            'desvio_medio': media('desvio'),
+            'n_passagem': sum(1 for w in por_wp if w['tipo'] == 'passagem'),
+            'n_chegada': sum(1 for w in por_wp if w['tipo'] == 'chegada'),
             'por_wp': por_wp,
         }
 
@@ -129,6 +139,8 @@ def tabelas_markdown(missoes, metricas):
         ('Tempo girando parado (s)', lambda k: f"{k['t_girando']:.1f}"),
         ('Velocidade linear RMS (m/s)', lambda k: f"{k['v_rms']:.3f}"),
         ('Velocidade angular RMS (rad/s)', lambda k: f"{k['w_rms']:.3f}"),
+        ('Waypoints por pose completa / por raio (passagem)',
+         lambda k: f"{k['n_chegada']} / {k['n_passagem']}"),
         ('Erro de posição na chegada, média (m)',
          lambda k: f"{k['erro_pos_medio']:.3f}"),
         ('Erro de orientação na chegada, média (°)',
@@ -139,6 +151,8 @@ def tabelas_markdown(missoes, metricas):
     texto = '## Resumo da missão\n\n' + cab
     for rotulo, fmt in linhas:
         texto += f'| {rotulo} | ' + ' | '.join(fmt(k) for k in metricas) + ' |\n'
+    texto += ('\nErros de chegada são médias só dos waypoints em que a pose '
+              'completa foi exigida (não incluem os concluídos por raio).\n')
 
     texto += '\n## Por waypoint\n\n'
     texto += ('| Waypoint | ' + ' | '.join(
@@ -157,8 +171,9 @@ def tabelas_markdown(missoes, metricas):
             if w is None:
                 celulas += ['-'] * 4
             else:
-                celulas += [f"{w['tempo']:.1f}", f"{w['erro_pos']:.3f}",
-                            f"{w['erro_ang']:.1f}", f"{w['desvio']:.3f}"]
+                ep = '-' if w['erro_pos'] is None else f"{w['erro_pos']:.3f}"
+                ea = '-' if w['erro_ang'] is None else f"{w['erro_ang']:.1f}"
+                celulas += [f"{w['tempo']:.1f}", ep, ea, f"{w['desvio']:.3f}"]
         texto += f'| {nome} | ' + ' | '.join(celulas) + ' |\n'
     return texto
 
@@ -172,6 +187,11 @@ def avisos(missoes):
             saida.append(
                 f'Os limites de {rotulo} são diferentes ({valores}): '
                 'o tempo total não é uma comparação justa.')
+    raios = {m.nome: m.parametros.get('raio_aceitacao', 0.0) for m in missoes}
+    if len(set(raios.values())) > 1:
+        saida.append(
+            f'Critério de waypoint intermediário diferente ({raios}; 0 = pose '
+            'completa): o tempo total reflete também essa diferença.')
     ordens = {tuple(m.ordem) for m in missoes}
     if len(ordens) > 1:
         saida.append('As missões têm waypoints diferentes.')

@@ -60,13 +60,24 @@ ros2 launch controle_trajetoria waypoints.launch.py params_file:=/caminho/meu.ya
 
 ## Como o controle contínuo funciona
 
-- **Aproximação** (longe do alvo): erro no referencial do robô, `e^b = R⁻¹·e`.
+- **Waypoints intermediários** (`raio_aceitacao`, padrão 0.25 m): o waypoint conta como alcançado
+  ao entrar nesse raio e o robô segue para o próximo sem parar (como o `ACC_RAD` do slide de missão).
+  A orientação do waypoint não é exigida, então não há giro no lugar entre eles.
+  Com `raio_aceitacao: 0` o contínuo volta a exigir a pose completa em cada waypoint.
+- **Último waypoint**: exige a pose completa (posição e orientação).
+- **Aproximação**: erro no referencial do robô, `e^b = R⁻¹·e`.
   `v = PID_x(e_x^b)` e `w = PID_y(e_y^b)`: anda e aponta para o alvo ao mesmo tempo.
-- **Alinhamento** (ao chegar na posição): gira no lugar com `w = PID_theta(e_theta)`.
-  `e_theta = normalize(theta_d - yaw)` fica em [-π, π], então o giro é sempre pelo caminho mais curto.
-  Nessa fase o erro lateral é ignorado (perto do alvo ele muda de sinal com qualquer deslocamento
-  e fazia o robô girar para o lado errado, dando voltas). `alignment_hysteresis` evita alternar
-  entre as fases quando o robô se afasta um pouco por inércia.
+- **Alinhamento** (só no último waypoint, ao chegar na posição): gira no lugar com
+  `w = PID_theta(e_theta)`. Nessa fase o erro lateral é ignorado (perto do alvo ele muda de sinal
+  com qualquer deslocamento e fazia o robô girar para o lado errado, dando voltas).
+  `alignment_hysteresis` evita alternar entre as fases quando o robô se afasta um pouco por inércia.
+
+## Menor caminho angular (wrap)
+
+Todo erro de ângulo passa por `wrap(a) = (a + π) mod 2π − π` (em graus: soma 180, resto da
+divisão por 360, subtrai 180), que devolve o ângulo em [-π, π). O sinal do resultado já indica
+o sentido do giro mais curto. Está em `continuo.py`, `manobras.py`, `seguidor_waypoints.py`
+(theta dos waypoints) e `comparar_missoes.py`.
 
 ## Bônus 1.2: comparar três manobras x contínuo
 
@@ -103,3 +114,11 @@ ros2 launch controle_trajetoria waypoints.launch.py controller:=manobras \
 
 Métricas: tempo total e por waypoint, distância percorrida, rotação acumulada, tempo girando parado,
 velocidades RMS, erro de posição/orientação na chegada e desvio máximo da reta entre waypoints.
+
+### Tipos de chegada no CSV
+
+- `chegada`: a pose completa foi atingida (as manobras sempre; o contínuo no último waypoint).
+- `passagem`: o contínuo entrou no `raio_aceitacao` de um waypoint intermediário.
+  Não há erro de chegada para esses waypoints (aparecem como `-` na tabela) e as médias de erro
+  consideram só as chegadas. O `comparar_missoes` avisa quando os dois controladores usam
+  critérios diferentes, porque isso também influencia o tempo total.
