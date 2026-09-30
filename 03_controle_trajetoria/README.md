@@ -18,7 +18,7 @@ ros2 launch controle_trajetoria robo_gazebo.launch.py
 
 O robô recebe comandos pelo `/cmd_vel` e publica a odometria em `/odom`.
 
-Dependência Python do controle contínuo: `python3 -m pip install simple-pid`
+Dependências Python: `python3 -m pip install simple-pid` (controle contínuo) e `sudo apt install python3-matplotlib` (gráficos da comparação)
 
 ## Organização do código
 
@@ -27,6 +27,7 @@ Dependência Python do controle contínuo: `python3 -m pip install simple-pid`
 | `controle_trajetoria/manobras.py` | Controle de pose por manobras lineares (rotação → translação → rotação) |
 | `controle_trajetoria/continuo.py` | Controle de pose contínuo: 3 PIDs em e_x^b, e_y^b e e_θ (9 ganhos) |
 | `controle_trajetoria/seguidor_waypoints.py` | Nó ROS: lê o YAML, a odometria e percorre os waypoints com o controlador escolhido |
+| `controle_trajetoria/comparar_missoes.py` | Lê os CSVs de duas missões e gera métricas, tabelas e gráficos (bônus 1.2) |
 | `controle_trajetoria/cmd_vel_relay.py` | Repassa `/cmd_vel` para o `diff_drive_controller` |
 
 `manobras.py` (`ControlePose`) e `continuo.py` (`PoseController`) mantêm a lógica das versões anteriores,
@@ -56,3 +57,43 @@ ros2 launch controle_trajetoria waypoints.launch.py controller:=continuo
 # Outro arquivo de parâmetros
 ros2 launch controle_trajetoria waypoints.launch.py params_file:=/caminho/meu.yaml
 ```
+
+## Como o controle contínuo funciona
+
+- **Aproximação** (longe do alvo): erro no referencial do robô, `e^b = R⁻¹·e`.
+  `v = PID_x(e_x^b)` e `w = PID_y(e_y^b)`: anda e aponta para o alvo ao mesmo tempo.
+- **Alinhamento** (ao chegar na posição): gira no lugar com `w = PID_theta(e_theta)`.
+  `e_theta = normalize(theta_d - yaw)` fica em [-π, π], então o giro é sempre pelo caminho mais curto.
+  Nessa fase o erro lateral é ignorado (perto do alvo ele muda de sinal com qualquer deslocamento
+  e fazia o robô girar para o lado errado, dando voltas). `alignment_hysteresis` evita alternar
+  entre as fases quando o robô se afasta um pouco por inércia.
+
+## Bônus 1.2: comparar três manobras x contínuo
+
+A comparação é justa quando os dois controladores têm os mesmos limites de velocidade
+(`max_linear_vel`/`v_max` e `max_angular_vel`/`w_max`, já iguais no YAML) e partem da mesma pose.
+Reinicie o simulador entre as duas execuções.
+
+```bash
+# Terminal 1: simulador (suba de novo antes de cada execução)
+ros2 launch controle_trajetoria robo_gazebo.launch.py
+
+# Terminal 2: 1ª execução; espere aparecer "Trajetória concluída."
+ros2 launch controle_trajetoria waypoints.launch.py controller:=continuo log_csv:=~/missoes/continuo.csv
+# (reinicie o simulador) e repita com o outro controlador
+ros2 launch controle_trajetoria waypoints.launch.py controller:=manobras log_csv:=~/missoes/manobras.csv
+
+# Comparação: tabela no terminal + comparacao.md + 2 gráficos
+ros2 run controle_trajetoria comparar_missoes ~/missoes/continuo.csv ~/missoes/manobras.csv --saida ~/missoes/resultado
+```
+
+Segunda missão, em que a orientação dos waypoints não aponta para o próximo (as diferenças aparecem mais):
+
+```bash
+ros2 launch controle_trajetoria waypoints.launch.py controller:=continuo \
+  waypoints_file:=$(ros2 pkg prefix controle_trajetoria)/share/controle_trajetoria/config/missao_zigzag.yaml \
+  log_csv:=~/missoes/zz_continuo.csv
+```
+
+Métricas: tempo total e por waypoint, distância percorrida, rotação acumulada, tempo girando parado,
+velocidades RMS, erro de posição/orientação na chegada e desvio máximo da reta entre waypoints.

@@ -1,12 +1,15 @@
-seguidor_waypoints:             
+seguidor_waypoints:
   ros__parameters:
     use_sim_time: true
 
-    control_rate: 50.0        
+    control_rate: 50.0
     odom_topic: /odom
     cmd_vel_topic: /cmd_vel
 
     controlador: continuo
+
+    # Arquivo CSV com a trajetória percorrida (vazio: não grava). Veja comparar_missoes.
+    registro_csv: ''
 
     # ---------------- Waypoints ----------------
     repetir: false               # true: volta ao primeiro após o último
@@ -21,23 +24,26 @@ seguidor_waypoints:
     p4: {x: 0.0, y: 0.0, theta: 0.0}       # volta à origem
 
     # ---------------- Controle contínuo (3 PIDs, 9 ganhos) ----------------
+    # Aproximação: v = PID_x(e_x^b), w = PID_y(e_y^b).
+    # Ao chegar na posição, gira no lugar pelo caminho mais curto: w = PID_theta(e_theta).
     continuo:
       pid_x:                     # e_x^b   -> velocidade linear v
         kp: 1.2
         ki: 0.0
         kd: 0.0
-      pid_y:                     # e_y^b   -> velocidade angular w (soma com pid_theta)
-        kp: 4.0
-        ki: 1.0
-        kd: 0.0
-      pid_theta:                 # e_theta -> velocidade angular w (soma com pid_y)
-        kp: 0.2
+      pid_y:                     # e_y^b   -> velocidade angular w (aproximação)
+        kp: 8.0
         ki: 0.0
         kd: 0.0
-      max_linear_vel: 0.5        # m/s
-      max_angular_vel: 1.5       # rad/s
+      pid_theta:                 # e_theta -> velocidade angular w (alinhamento final)
+        kp: 1.5
+        ki: 0.0
+        kd: 0.0
+      max_linear_vel: 0.3        # m/s   (igual às manobras: comparação justa)
+      max_angular_vel: 1.0       # rad/s (igual às manobras: comparação justa)
       position_tolerance: 0.03   # m
       yaw_tolerance: 0.05        # rad
+      alignment_hysteresis: 2.0  # sai do alinhamento se dist > 2 * position_tolerance
 
     # ---------------- Manobras: rotação -> translação -> rotação ----------------
     manobras:

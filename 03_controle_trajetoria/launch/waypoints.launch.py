@@ -12,6 +12,13 @@ def _criar_seguidor(context):
     controlador = LaunchConfiguration('controller').perform(context)
     if controlador:
         parametros.append({'controlador': controlador})
+    # Arquivo opcional só com waypoints: sobrescreve a lista do params_file
+    missao = LaunchConfiguration('waypoints_file').perform(context)
+    if missao:
+        parametros.append(missao)
+    registro = LaunchConfiguration('log_csv').perform(context)
+    if registro:
+        parametros.append({'registro_csv': registro})
 
     return [Node(
         package='controle_trajetoria',
@@ -34,5 +41,11 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'controller', default_value='',
             description="'continuo' ou 'manobras' (vazio: usa o do YAML)"),
+        DeclareLaunchArgument(
+            'waypoints_file', default_value='',
+            description='YAML só com waypoints (ex.: config/missao_zigzag.yaml)'),
+        DeclareLaunchArgument(
+            'log_csv', default_value='',
+            description='Arquivo CSV para gravar a trajetória (vazio: não grava)'),
         OpaqueFunction(function=_criar_seguidor),
     ])

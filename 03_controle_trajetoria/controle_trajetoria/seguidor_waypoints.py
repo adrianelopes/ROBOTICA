@@ -1,5 +1,8 @@
+import csv
 import inspect
+import json
 import math
+import os
 from typing import NamedTuple
 
 from geometry_msgs.msg import Twist
@@ -44,6 +47,7 @@ class SeguidorWaypoints(Node):
         odom_topic = str(self._declarar('odom_topic', '/odom'))
         cmd_vel_topic = str(self._declarar('cmd_vel_topic', '/cmd_vel'))
         self.repetir = bool(self._declarar('repetir', False))
+        registro_csv = str(self._declarar('registro_csv', '') or '')
 
         self.controlador = self._criar_controlador()
         self.waypoints = self._carregar_waypoints()
@@ -52,6 +56,11 @@ class SeguidorWaypoints(Node):
         self.pose = None
         self._periodo = 1.0 / taxa
         self._t_anterior = None
+        self._t0 = None
+        self._registro = None
+        self._csv = None
+        if registro_csv:
+            self._abrir_registro(registro_csv)
 
         self.cmd_pub = self.create_publisher(Twist, cmd_vel_topic, 10)
         self.create_subscription(Odometry, odom_topic, self._odom_callback, 10)
@@ -90,6 +99,8 @@ class SeguidorWaypoints(Node):
                 f"Opções: {', '.join(CONTROLADORES)}.")
         classe = CONTROLADORES[tipo]
         argumentos = self._ler_argumentos(tipo, classe)
+        self._tipo = tipo
+        self._argumentos_controlador = argumentos
         self.get_logger().info(f'Controlador: {tipo} | {argumentos}')
         return classe(**argumentos, logger=self.get_logger())
 
@@ -121,6 +132,40 @@ class SeguidorWaypoints(Node):
             waypoints.append((nome, Pose2D(float(x), float(y), theta)))
         return waypoints
 
+    def _abrir_registro(self, caminho):
+        """Abre o CSV da missão (usado por comparar_missoes)."""
+        caminho = os.path.expanduser(caminho)
+        pasta = os.path.dirname(caminho)
+        if pasta:
+            os.makedirs(pasta, exist_ok=True)
+        self._registro = open(caminho, 'w', newline='', encoding='utf-8')
+        self._registro.write(f'# controlador={self._tipo}\n')
+        self._registro.write(
+            f'# parametros={json.dumps(self._argumentos_controlador)}\n')
+        self._registro.write('# waypoints=' + json.dumps(
+            [[n, p.x, p.y, p.theta] for n, p in self.waypoints]) + '\n')
+        self._csv = csv.writer(self._registro, lineterminator='\n')
+        self._csv.writerow(['t', 'x', 'y', 'yaw', 'v_cmd', 'w_cmd',
+                            'waypoint', 'evento'])
+        self.get_logger().info(f'Registrando a missão em {caminho}')
+
+    def _registrar(self, agora, v, w, evento):
+        if self._csv is None:
+            return
+        if self._t0 is None:
+            self._t0 = agora
+        t = (agora - self._t0).nanoseconds * 1e-9
+        p = self.pose
+        self._csv.writerow([f'{t:.3f}', f'{p.x:.4f}', f'{p.y:.4f}',
+                            f'{p.theta:.4f}', f'{v:.4f}', f'{w:.4f}',
+                            self.waypoints[self.indice][0], evento])
+
+    def fechar_registro(self):
+        if self._registro is not None:
+            self._registro.close()
+            self._registro = None
+            self._csv = None
+
     def _ir_para(self, indice):
         self.indice = indice
         nome, pose = self.waypoints[indice]
@@ -141,6 +186,7 @@ class SeguidorWaypoints(Node):
         else:
             # Mantém o último objetivo: o robô segura a pose final.
             self.concluido = True
+            self.fechar_registro()
             self.get_logger().info('Trajetória concluída.')
 
     def _odom_callback(self, msg):
@@ -164,7 +210,10 @@ class SeguidorWaypoints(Node):
 
         v, w = self.controlador.calcular(self.pose, dt)
         self.publicar(v, w)
-        if self.controlador.chegou:
+        chegou = self.controlador.chegou
+        if not self.concluido:
+            self._registrar(agora, v, w, 'chegada' if chegou else '')
+        if chegou:
             self._ao_chegar()
 
     def publicar(self, v, w):
@@ -191,6 +240,7 @@ def main(args=None):
             no.publicar(0.0, 0.0)
         except Exception:
             pass
+        no.fechar_registro()
         no.destroy_node()
         rclpy.try_shutdown()
     return 0

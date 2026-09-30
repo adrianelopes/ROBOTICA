@@ -1,0 +1,17 @@
+controle_pose:                   
+  ros__parameters:
+    use_sim_time: true
+
+    odom_topic: /odom
+    goal_topic: /goal_pose       
+    x: 1.0
+    y: 1.0
+    theta: 0.0
+
+    k_linear: 0.5
+    k_angular: 1.5
+    v_max: 0.3                   # m/s
+    w_max: 1.0                   # rad/s
+
+    tol_distancia: 0.02          # m
+    tol_angulo: 0.02             # rad
