@@ -40,6 +40,7 @@ setup(
             'cmd_vel_relay = controle_trajetoria.cmd_vel_relay:main',
             'seguidor_waypoints = controle_trajetoria.seguidor_waypoints:main',
             'comparar_missoes = controle_trajetoria.comparar_missoes:main',
+            'trajetoria_8 = controle_trajetoria.trajetoria_8:main',
         ],
     },
 )

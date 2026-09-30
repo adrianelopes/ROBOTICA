@@ -1,0 +1,11 @@
+trajetoria_8:
+  ros__parameters:
+    A: 1.0
+    B: 2.0
+    omega: 0.5
+    modo: "realimentado"      # "malha_aberta" ou "realimentado"
+    k_ff: 1.0
+    pid_x: [1.5, 0.0, 0.0]    # kp, ki, kd
+    pid_y: [3.0, 0.0, 0.0]
+    pid_theta: [3.0, 0.0, 0.0]
+    taxa: 50.0

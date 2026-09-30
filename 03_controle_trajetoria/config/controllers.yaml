@@ -28,15 +28,16 @@ diff_drive_controller:
     cmd_vel_timeout: 0.5    # para o robô se não chegar comando em 0.5 s
 
     linear.x.has_velocity_limits: true
-    linear.x.max_velocity: 1.0
-    linear.x.min_velocity: -1.0
+    # O 8 (A=1, B=2, Ω=0.5) exige até 2.06 m/s e 5.7 rad/s
+    linear.x.max_velocity: 2.5
+    linear.x.min_velocity: -2.5
     linear.x.has_acceleration_limits: true
-    linear.x.max_acceleration: 0.8
-    linear.x.min_acceleration: -0.8
+    linear.x.max_acceleration: 5.0
+    linear.x.min_acceleration: -5.0
 
     angular.z.has_velocity_limits: true
-    angular.z.max_velocity: 2.0
-    angular.z.min_velocity: -2.0
+    angular.z.max_velocity: 7.0
+    angular.z.min_velocity: -7.0
     angular.z.has_acceleration_limits: true
-    angular.z.max_acceleration: 1.5
-    angular.z.min_acceleration: -1.5
+    angular.z.max_acceleration: 30.0
+    angular.z.min_acceleration: -30.0
