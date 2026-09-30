@@ -1,6 +1,6 @@
 import math
 
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.node import Node
@@ -42,6 +42,7 @@ class ControlePose(Node):
         self.declare_parameter('tol_angulo', 0.02)    
 
         self.declare_parameter('odom_topic', '/odom')
+        self.declare_parameter('goal_topic', '/goal_pose')
 
         p = self.get_parameter
         self.x_d = p('x').value
@@ -60,6 +61,8 @@ class ControlePose(Node):
         self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.create_subscription(
             Odometry, p('odom_topic').value, self.odom_callback, 10)
+        self.create_subscription(
+            PoseStamped, p('goal_topic').value, self.goal_callback, 10)
         self.create_timer(0.05, self.controle) 
 
         self.get_logger().info(
@@ -69,6 +72,16 @@ class ControlePose(Node):
     def odom_callback(self, msg):
         pos = msg.pose.pose.position
         self.pose = (pos.x, pos.y, yaw_do_quaternion(msg.pose.pose.orientation))
+
+    def goal_callback(self, msg):
+        pos = msg.pose.position
+        self.x_d = pos.x
+        self.y_d = pos.y
+        self.theta_d = yaw_do_quaternion(msg.pose.orientation)
+        self.estado = self.ROTACAO_INICIAL
+        self.get_logger().info(
+            f'Nova pose desejada: x={self.x_d:.2f} m, y={self.y_d:.2f} m, '
+            f'theta={math.degrees(self.theta_d):.1f}°')
 
     def mudar_estado(self, novo):
         x, y, yaw = self.pose

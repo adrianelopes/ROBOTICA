@@ -22,7 +22,6 @@ def generate_launch_description():
         launch_arguments={'verbose': 'true'}.items(),
     )
 
-    # Publica robot_description, lido pelo spawn_entity e pelo gazebo_ros2_control
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -60,7 +59,6 @@ def generate_launch_description():
         output='screen',
     )
 
-    # Os controladores só são ativados depois que o robô existe no Gazebo
     start_controllers = RegisterEventHandler(
         OnProcessExit(
             target_action=spawn_entity,

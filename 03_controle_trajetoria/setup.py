@@ -39,6 +39,7 @@ setup(
         'console_scripts': [
             'cmd_vel_relay = controle_trajetoria.cmd_vel_relay:main',
             'controle_pose_manobras = controle_trajetoria.controle_pose_manobras:main',
+            'pose_controller = controle_trajetoria.pose_controller:main',
         ],
     },
 )
