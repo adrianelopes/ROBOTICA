@@ -8,14 +8,10 @@ seguidor_waypoints:
 
     controlador: continuo
 
-    # Arquivo CSV com a trajetória percorrida (vazio: não grava). Veja comparar_missoes.
     registro_csv: ''
 
-    # ---------------- Waypoints ----------------
-    repetir: false               # true: volta ao primeiro após o último
+    repetir: false              
 
-    # Ordem de visita (mínimo 3). Cada nome abaixo precisa de x e y (m);
-    # theta (rad, orientação final no waypoint) é opcional, padrão 0.0.
     waypoints: [p1, p2, p3, p4]
 
     p1: {x: 1.0, y: 0.0, theta: 1.5708}    # 90°
@@ -23,33 +19,30 @@ seguidor_waypoints:
     p3: {x: 0.0, y: 1.0, theta: -1.5708}   # -90°
     p4: {x: 0.0, y: 0.0, theta: 0.0}       # volta à origem
 
-    # ---------------- Controle contínuo (3 PIDs, 9 ganhos) ----------------
-    # Aproximação: v = PID_x(e_x^b), w = PID_y(e_y^b).
-    # Ao chegar na posição, gira no lugar pelo caminho mais curto: w = PID_theta(e_theta).
+    
     continuo:
-      pid_x:                     # e_x^b   -> velocidade linear v
+      pid_x:                     # e_x^b  
         kp: 1.2
         ki: 0.0
         kd: 0.0
-      pid_y:                     # e_y^b   -> velocidade angular w (aproximação)
+      pid_y:                     # e_y^b  
         kp: 8.0
         ki: 0.0
         kd: 0.0
-      pid_theta:                 # e_theta -> velocidade angular w (alinhamento final)
+      pid_theta:                 # e_theta  (alinhamento final)
         kp: 1.5
         ki: 0.0
         kd: 0.0
-      max_linear_vel: 0.3        # m/s   (igual às manobras: comparação justa)
-      max_angular_vel: 1.0       # rad/s (igual às manobras: comparação justa)
-      position_tolerance: 0.03   # m
-      yaw_tolerance: 0.05        # rad
-      alignment_hysteresis: 2.0  # sai do alinhamento se dist > 2 * position_tolerance
+      max_linear_vel: 0.3        
+      max_angular_vel: 1.0       
+      position_tolerance: 0.03   
+      yaw_tolerance: 0.05        
+      alignment_hysteresis: 2.0  
 
-    # ---------------- Manobras: rotação -> translação -> rotação ----------------
     manobras:
       k_linear: 0.5
       k_angular: 1.5
-      v_max: 0.3                 # m/s
-      w_max: 1.0                 # rad/s
-      tol_distancia: 0.02        # m
-      tol_angulo: 0.02           # rad
+      v_max: 0.3                
+      w_max: 1.0                 
+      tol_distancia: 0.02        
+      tol_angulo: 0.02           

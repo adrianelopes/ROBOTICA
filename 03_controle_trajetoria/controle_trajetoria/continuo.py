@@ -1,8 +1,6 @@
-# Controle de pose contínuo (Estratégia 2 da aula)
-#
-# Fase de aproximação: o erro de pose é levado para o referencial do robô {B}
-#     v = PID_x(e_x^b)          (alvo à frente/atrás -> anda)
-#     w = PID_y(e_y^b)          (alvo ao lado -> gira até apontar para ele)
+
+#     v = PID_x(e_x^b)          
+#     w = PID_y(e_y^b)          
 
 
 import logging
@@ -22,7 +20,6 @@ def clamp(value, limit):
 
 
 class PoseController:
-    """Recebe a pose desejada e a atual e calcula as velocidades (v, w)."""
 
     def __init__(self, max_linear_vel=0.5, max_angular_vel=1.5,
                  position_tolerance=0.03, yaw_tolerance=0.05,
@@ -41,9 +38,9 @@ class PoseController:
         self.pid_y = self._make_pid(pid_y, self.max_ang)
         self.pid_theta = self._make_pid(pid_theta, self.max_ang)
 
-        self.goal = None       # (x, y, yaw) desejado
-        self.reached = False   # True enquanto está dentro da tolerância
-        self.aligning = False  # True na fase de girar no lugar
+        self.goal = None       
+        self.reached = False  
+        self.aligning = False  
 
     def _make_pid(self, gains, limit):
         """Cria um PID com os ganhos (kp, ki, kd).
@@ -60,7 +57,6 @@ class PoseController:
         for pid in (self.pid_x, self.pid_y, self.pid_theta):
             pid.reset()
 
-    # Interface usada pelo seguidor_waypoints
 
     def definir_objetivo(self, goal):
         self.goal = goal
@@ -78,21 +74,17 @@ class PoseController:
     def chegou(self):
         return self.reached
 
-    # Lógica de controle
 
     def compute_command(self, pose, goal, dt):
         """Retorna (v, w) a partir da pose atual, da desejada e do dt."""
         x, y, yaw = pose
         xd, yd, yaw_d = goal
 
-        # 1) Erro no referencial do mundo {I}
         e_x = xd - x
         e_y = yd - y
         dist = math.hypot(e_x, e_y)
-        # Sempre em [-pi, pi]: o sinal já indica o sentido do caminho mais curto
         e_theta = normalize_angle(yaw_d - yaw)
 
-        # Chegou: para e zera os integradores (evita "wind-up" parado)
         if dist < self.pos_tol and abs(e_theta) < self.yaw_tol:
             if not self.reached:
                 self.reached = True
@@ -101,8 +93,7 @@ class PoseController:
             return 0.0, 0.0
         self.reached = False
 
-        # Fase de alinhamento: entra ao chegar na posição e só sai se o robô
-        # se afastar (histerese) ou se a orientação já estiver certa.
+        
         if dist < self.pos_tol:
             if not self.aligning:
                 self.aligning = True
@@ -111,20 +102,15 @@ class PoseController:
             self.aligning = False
 
         if self.aligning:
-            # Gira no lugar: só o PID de theta atua. O erro lateral (e_y^b)
-            # não pode comandar o giro aqui: perto do alvo ele muda de sinal
-            # com qualquer deslocamento e fazia o robô girar para o lado errado.
             self._reset_pids_posicao()
             return 0.0, clamp(self.pid_theta(-e_theta, dt=dt), self.max_ang)
 
-        # 2) Erro no referencial do robô {B}: e^b = R^-1 * e
         c, s = math.cos(yaw), math.sin(yaw)
         e_x_b = c * e_x + s * e_y
         e_y_b = -s * e_x + c * e_y
 
-        # 3) Fase de aproximação: anda e aponta para o alvo ao mesmo tempo
-        v = self.pid_x(-e_x_b, dt=dt)      # frente/trás
-        w = self.pid_y(-e_y_b, dt=dt)      # erro lateral -> giro
+        v = self.pid_x(-e_x_b, dt=dt)     
+        w = self.pid_y(-e_y_b, dt=dt)      
         return v, clamp(w, self.max_ang)
 
     def _reset_pids_posicao(self):

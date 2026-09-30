@@ -9,11 +9,10 @@ import math
 import os
 import sys
 
-# Nome do parâmetro de limite em cada controlador (contínuo / manobras)
 CHAVES_V = ('max_linear_vel', 'v_max')
 CHAVES_W = ('max_angular_vel', 'w_max')
-LIMIAR_PARADO = 0.01     # m/s: abaixo disso o robô está "sem andar"
-LIMIAR_GIRO = 0.05       # rad/s: acima disso o robô está girando
+LIMIAR_PARADO = 0.01    
+LIMIAR_GIRO = 0.05     
 
 
 def normalizar(angulo):
@@ -32,7 +31,6 @@ def distancia_ao_segmento(px, py, ax, ay, bx, by):
 
 
 class Missao:
-    """Uma missão gravada: metadados do cabeçalho e as amostras do CSV."""
 
     def __init__(self, caminho):
         self.caminho = caminho

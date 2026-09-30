@@ -1,6 +1,4 @@
-# Missão alternativa para a comparação: a orientação de cada waypoint NÃO aponta
-# para o próximo, então os controladores precisam girar/andar de formas diferentes.
-# Uso: ros2 launch controle_trajetoria waypoints.launch.py waypoints_file:=<este arquivo>
+
 seguidor_waypoints:
   ros__parameters:
     waypoints: [z1, z2, z3, z4, z5]

@@ -94,6 +94,12 @@ ros2 launch controle_trajetoria waypoints.launch.py controller:=continuo \
   waypoints_file:=$(ros2 pkg prefix controle_trajetoria)/share/controle_trajetoria/config/missao_zigzag.yaml \
   log_csv:=~/missoes/zz_continuo.csv
 ```
+```bash
+ros2 launch controle_trajetoria waypoints.launch.py controller:=manobras \
+  waypoints_file:=$(ros2 pkg prefix controle_trajetoria)/share/controle_trajetoria/config/missao_zigzag.yaml \
+  log_csv:=~/missoes/zz_manobras.csv
+```
+
 
 Métricas: tempo total e por waypoint, distância percorrida, rotação acumulada, tempo girando parado,
 velocidades RMS, erro de posição/orientação na chegada e desvio máximo da reta entre waypoints.

@@ -13,8 +13,8 @@ class Trajetoria8(Node):
         super().__init__('trajetoria_8')
         self.pose = None
         self.t0 = None
-        self.soma_e2 = 0.0     # soma dos erros de posição ao quadrado
-        self.n = 0             # quantidade de amostras
+        self.soma_e2 = 0.0     
+        self.n = 0            
         self.volta = 0
         self.get_logger().info('trajetoria_8 start')
         self.declare_parameter('A', 1.0)

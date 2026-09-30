@@ -1,4 +1,4 @@
-"""Repassa /cmd_vel para a entrada do diff_drive_controller."""
+#Repassa /cmd_vel para a entrada do diff_drive_controller
 
 from geometry_msgs.msg import Twist
 import rclpy
@@ -6,7 +6,6 @@ from rclpy.node import Node
 
 
 class CmdVelRelay(Node):
-    """Assina /cmd_vel e publica em /diff_drive_controller/cmd_vel_unstamped."""
 
     def __init__(self):
         super().__init__('cmd_vel_relay')
