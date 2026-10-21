@@ -163,5 +163,9 @@ colcon build --packages-select sensores
 source install/setup.bash
 source /usr/share/gazebo/setup.bash
 
-# Terminal único: simulador + sensores + estimador + controle
-ros2 launch sensores trajetoria_8.launch.py                     # ruído normal
+Usando odom:
+ros2 launch sensores trajetoria_8.launch.py topico_pose:=/odom escala_ruido:=0.0 omega:=0.2
+
+Usando os sensores:
+
+ros2 launch sensores trajetoria_8.launch.py topico_pose:=/pose_estimada escala_ruido:=0.0 omega:=0.2
