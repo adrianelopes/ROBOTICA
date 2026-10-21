@@ -4,6 +4,8 @@
   (a câmera e o lidar precisam ter o que enxergar).
   O <spherical_coordinates> é obrigatório para o GPS: define a latitude/longitude da origem do mundo.
   Mantenha a origem igual à de config/sensores.yaml (origem_lat, origem_lon, origem_alt).
+  heading_deg = 180 por causa de um bug do Gazebo Classic: com heading 0 ele trata o mundo como
+  oeste-sul-cima (X e Y invertidos no GPS). Com 180, X fica para o leste e Y para o norte (ENU).
 -->
 <sdf version="1.6">
   <world name="sensores_world">
@@ -19,7 +21,7 @@
       <latitude_deg>-7.1396</latitude_deg>
       <longitude_deg>-34.8450</longitude_deg>
       <elevation>5.0</elevation>
-      <heading_deg>0</heading_deg>
+      <heading_deg>180</heading_deg>
     </spherical_coordinates>
 
     <model name="caixa_vermelha">

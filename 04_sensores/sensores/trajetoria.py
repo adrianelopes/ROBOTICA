@@ -12,7 +12,7 @@ def referencia(t, A, B, W):
     v_f = math.sqrt(dxd*dxd + dyd*dyd)
 
     ddxd = -A * W*W * math.sin(W * t)
-    ddyd = -4 * B * W*W * math.sin(2* W *t)
+    ddyd = -4 * B * W*W * math.sin(2 * W * t)
 
     w_f = (dxd * ddyd - dyd * ddxd) / (dxd*dxd + dyd*dyd)
 
@@ -21,6 +21,7 @@ def referencia(t, A, B, W):
 
 def normaliza_angulo(a):
     return math.atan2(math.sin(a), math.cos(a))
+
 
 def yaw_from_quaternion(q):
     return math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))

@@ -19,7 +19,8 @@ def test_origem_do_gps_igual_a_do_mundo():
     assert gps['origem_lat'] == pytest.approx(float(esferico.findtext('latitude_deg')))
     assert gps['origem_lon'] == pytest.approx(float(esferico.findtext('longitude_deg')))
     assert gps['origem_alt'] == pytest.approx(float(esferico.findtext('elevation')))
-    assert float(esferico.findtext('heading_deg')) == 0.0
+    # 180 compensa o bug do Gazebo Classic e deixa o mundo em ENU (ver worlds/sensores.world)
+    assert float(esferico.findtext('heading_deg')) == 180.0
 
 
 @pytest.mark.parametrize('arquivo', [

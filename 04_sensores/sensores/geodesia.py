@@ -23,8 +23,9 @@ class ConversorGps:
     """
     Conversão dos fixes do GPS em (X, Y, Z) no referencial local ENU de uma origem.
 
-    X aponta para o leste, Y para o norte e Z para cima. É o mesmo referencial do mundo do
-    Gazebo quando o `heading_deg` das coordenadas esféricas é 0.
+    X aponta para o leste, Y para o norte e Z para cima. No Gazebo Classic, é o mesmo referencial
+    do mundo quando o `heading_deg` das coordenadas esféricas é 180 (com 0, um bug do Gazebo
+    inverte X e Y).
     """
 
     def __init__(self, lat0, lon0, alt0):
