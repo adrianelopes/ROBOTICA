@@ -125,22 +125,6 @@ para ver no RViz a pose estimada (GPS + IMU) ao lado da real (`/odom`). Desligue
 `frame_estimado: ''` no YAML. Note que a árvore do ROS não lista a raiz como chave
 (ela só aparece como `parent`), por isso o `arvore_tf` a mostra sem taxa.
 
-Inspecionar:
-
-```bash
-# com a trajetória em 8 rodando: a árvore aparece sozinha no terminal
-ros2 launch sensores trajetoria_8.launch.py
-ros2 launch sensores trajetoria_8.launch.py tf_pdf:=~/arvore.pdf   # + PDF (graphviz)
-ros2 launch sensores trajetoria_8.launch.py arvore_tf:=false       # sem a árvore
-
-# a qualquer momento, com qualquer launch
-ros2 run sensores arvore_tf                  # só a árvore, no terminal
-ros2 run tf2_tools view_frames               # grava frames.pdf (requer tf2-tools)
-ros2 run tf2_ros tf2_echo world lidar_link   # matriz entre dois frames
-ros2 run tf2_ros tf2_echo odom pose_estimada
-ros2 topic echo /tf_static --once
-```
-
 Se um consumidor precisar de outro referencial (por exemplo, o ponto do GPS no
 `chassis` em vez de no `odom`), converta em tempo de execução com o `tf2_ros`
 (`Buffer.lookup_transform`) em vez de criar mais juntas fixas.
@@ -232,4 +216,10 @@ source /usr/share/gazebo/setup.bash
 # Terminal único: simulador + sensores + estimador + controle
 ros2 launch sensores trajetoria_8.launch.py                     # ruído normal
 
-ros2 run tf2_ros tf2_echo odom pose_estimada
+## Árvore de Transformação
+```bash
+ros2 run tf2_ros tf2_echo world lidar_link      # estimado x real, lado a lado
+ros2 topic echo /tf_static --once               # os elos fixos, com os números do xacro
+
+ros2 run tf2_tools view_frames                  # grava frames.pdf
+```
