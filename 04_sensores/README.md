@@ -166,7 +166,11 @@ ros2 launch sensores sensores.launch.py escala_ruido:=5.0
 O mundo `worlds/sensores.world` define a origem geográfica em `<spherical_coordinates>`
 (-7.1396°, -34.8450°, 5 m). O nó `gps_xyz` converte cada `NavSatFix` para o referencial local ENU
 dessa origem (WGS84 → ECEF → ENU, em `sensores/geodesia.py`): X leste, Y norte, Z para cima. Como o robô nasce na origem do mundo, esse
-referencial coincide com o `odom`. A origem do YAML (`origem_lat/lon/alt`) deve ser igual à do mundo; com
+referencial coincide com o `odom`.
+
+O mundo usa `<heading_deg>180</heading_deg>` de propósito. O Gazebo Classic tem um bug: com heading 0,
+ele trata o mundo como oeste-sul-cima, e as leituras do GPS saem espelhadas pela origem (robô em (2, 1)
+→ GPS em (−2, −1)). Com 180, o mundo do Gazebo fica em ENU (X leste, Y norte). A origem do YAML (`origem_lat/lon/alt`) deve ser igual à do mundo; com
 `origem_automatica: true` a origem passa a ser a primeira leitura do GPS.
 
 ## Organização do código
