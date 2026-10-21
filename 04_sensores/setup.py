@@ -42,6 +42,8 @@ setup(
             'imu_orientacao = sensores.imu_orientacao:main',
             'gps_xyz = sensores.gps_xyz:main',
             'scan_para_nuvem = sensores.scan_para_nuvem:main',
+            'estimador_pose = sensores.estimador_pose:main',
+            'trajetoria_8 = sensores.trajetoria_8:main',
         ],
     },
 )

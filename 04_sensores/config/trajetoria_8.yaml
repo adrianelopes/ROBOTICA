@@ -1,0 +1,24 @@
+# Parâmetros da trajetória em 8 com sensores (exercício 2.1)
+
+estimador_pose:
+  ros__parameters:
+    use_sim_time: true
+    topico_saida: /pose_estimada
+    frame_id: odom
+    gps_x_chassi: -0.12     # gps_joint no sensores.xacro
+    eixo_x_chassi: 0.1      # rodas em x = 0.1 no model.urdf.xacro
+
+trajetoria_8:
+  ros__parameters:
+    use_sim_time: true
+    A: 1.0
+    B: 2.0
+    omega: 0.5
+    modo: realimentado        # realimentado | malha_aberta
+    k_ff: 1.0
+    pid_x: [1.5, 0.0, 0.0]    # kp, ki, kd (mesmos ganhos da prática 03)
+    pid_y: [3.0, 0.0, 0.0]
+    pid_theta: [3.0, 0.0, 0.0]
+    taxa: 50.0
+    topico_pose: /pose_estimada   # o controle usa GPS + IMU (troque por /odom para comparar)
+    topico_real: /odom            # só para medir o erro real

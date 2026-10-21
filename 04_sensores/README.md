@@ -152,3 +152,16 @@ colcon test-result --verbose
 | `test_nuvem.py` | Ângulos e distâncias dos pontos; leituras `inf`/`NaN`/fora do alcance são descartadas |
 | `test_modelo.py` | 4 sensores, plugins e tópicos, ruído gaussiano em todos, `escala_ruido` multiplica os desvios, corpo visual, árvore de links |
 | `test_configuracao.py` | Origem do GPS no YAML igual à do mundo; arquivos instalados existem |
+
+Atividade 4:
+
+
+python3 -m pip install simple-pid
+
+cd ~/ros2_ws
+colcon build --packages-select sensores
+source install/setup.bash
+source /usr/share/gazebo/setup.bash
+
+# Terminal único: simulador + sensores + estimador + controle
+ros2 launch sensores trajetoria_8.launch.py                     # ruído normal
