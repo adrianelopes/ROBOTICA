@@ -76,7 +76,7 @@
       </imu>
       <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
         <ros>
-          <!-- orientação ainda sem ruído: o nó imu_orientacao a ruidifica e publica /imu/data -->
+          <!-- orientação ainda sem ruído, o nó imu_orientacao a ruidifica e publica /imu/data -->
           <namespace>/imu</namespace>
           <remapping>~/out:=data_bruto</remapping>
         </ros>
