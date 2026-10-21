@@ -1,4 +1,3 @@
-"""Trajetória em 8 (prática 03) agora realimentada pela pose estimada com GPS + IMU."""
 
 import math
 
@@ -33,7 +32,7 @@ class Trajetoria8(Node):
         kp, ki, kd = self.declare_parameter('pid_theta', [3.0, 0.0, 0.0]).value
         self.pid_theta = PID(kp, ki, kd, setpoint=0.0, sample_time=None)
 
-        self.pose = None        # estimada (GPS + IMU): é a que o controle enxerga
+        self.pose = None        # Estimada (GPS + IMU): é a que o controle enxerga
         self.pose_real = None   # /odom: só para comparar
         self.t0 = None
         self.t_anterior = None
@@ -71,7 +70,7 @@ class Trajetoria8(Node):
         agora = self.get_clock().now().nanoseconds / 1e9
         if agora == 0.0:
             return
-        # espera os sensores e também o /odom: ele só aparece depois que os controladores sobem
+        # Espera os sensores e também o /odom: ele só aparece depois que os controladores sobem
         if self.pose is None or self.pose_real is None:
             self.get_logger().info('Aguardando pose dos sensores e /odom...',
                                    throttle_duration_sec=2.0)
@@ -82,7 +81,7 @@ class Trajetoria8(Node):
 
         xd, yd, theta_d, v_f, w_f = referencia(t, self.A, self.B, self.W)
 
-        # erro que o controle ENXERGA (pose estimada) e erro REAL (odometria sem ruído)
+        # Erro que o controle ENXERGA (pose estimada) e erro REAL (odometria sem ruído)
         x, y, theta = self.pose
         ex, ey = xd - x, yd - y
         etheta = normaliza_angulo(theta_d - theta)

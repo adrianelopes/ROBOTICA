@@ -1,5 +1,3 @@
-"""Estima a pose (x, y, yaw) do robô só com GPS e IMU, no mesmo padrão do /odom."""
-
 import math
 
 from geometry_msgs.msg import PointStamped, TransformStamped
@@ -20,19 +18,18 @@ class EstimadorPose(Node):
         super().__init__('estimador_pose')
         saida = self.declare_parameter('topico_saida', '/pose_estimada').value
         self.frame_id = self.declare_parameter('frame_id', 'odom').value
-        # frame opcional para ver a pose estimada na árvore de transformações.
+        # Frame opcional para ver a pose estimada na árvore de transformações.
         # É um filho do odom separado de chassis: o odom -> chassis é do controlador.
         self.frame_estimado = self.declare_parameter(
             'frame_estimado', 'pose_estimada').value
-        # posições em x no referencial do chassi (ver os joints do xacro)
+        # Posições em x no referencial do chassi 
         self.gps_x = self.declare_parameter('gps_x_chassi', -0.12).value
         self.eixo_x = self.declare_parameter('eixo_x_chassi', 0.1).value
-        # Calibração: neste mundo o /gps/xyz vem com X e Y de sinal trocado em relação ao
-        # Gazebo (conferido contra o /odom). Use [1.0, 1.0] se o /gps/xyz for corrigido.
+        # O /gps/xyz vem com X e Y de sinal trocado em relação ao Gazebo 
         sinal = self.declare_parameter('gps_sinal_xy', [-1.0, -1.0]).value
         self.sinal_x, self.sinal_y = float(sinal[0]), float(sinal[1])
 
-        self.yaw = None   # só há pose depois da primeira leitura da IMU
+        self.yaw = None   # Só há pose depois da primeira leitura da IMU
 
         self.pub = self.create_publisher(Odometry, saida, 10)
         self.tf = TransformBroadcaster(self)
@@ -51,14 +48,14 @@ class EstimadorPose(Node):
     def _gps_callback(self, msg):
         if self.yaw is None:
             return
-        # 0) acerta o sinal do GPS para o referencial do Gazebo
+        # Acerta o sinal do GPS para o referencial do Gazebo
         gx = self.sinal_x * msg.point.x
         gy = self.sinal_y * msg.point.y
-        # 1) da antena do GPS até o ponto médio do eixo das rodas (é ele que o /odom acompanha)
+        # Da antena do GPS até o ponto médio do eixo das rodas (é ele que o /odom acompanha)
         d = self.eixo_x - self.gps_x
         x = gx + d * math.cos(self.yaw)
         y = gy + d * math.sin(self.yaw)
-        # 2) o /odom começa em (0, 0): tira a posição inicial do eixo (robô nasce em yaw = 0)
+        # O /odom começa em (0, 0): tira a posição inicial do eixo (robô nasce em yaw = 0)
         x -= self.eixo_x
 
         odom = Odometry()
