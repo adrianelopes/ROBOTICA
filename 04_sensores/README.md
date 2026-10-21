@@ -23,7 +23,7 @@ sudo apt update
 sudo apt install -y ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros2-control \
   ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-xacro \
   ros-humble-robot-state-publisher ros-humble-rviz2 ros-humble-plotjuggler-ros \
-  ros-humble-teleop-twist-keyboard python3-pytest python3-yaml
+  ros-humble-tf2-tools ros-humble-teleop-twist-keyboard python3-pytest python3-yaml
 ```
 
 Este repositório é uma pasta de pacotes. Coloque-o em `src/` de um workspace:
@@ -84,8 +84,66 @@ Conferência rápida pelo terminal:
 ros2 topic list
 ros2 topic hz /scan
 ros2 topic echo /gps/xyz --once
-ros2 run tf2_tools view_frames       # árvore: odom → chassis → sensores
+ros2 run tf2_tools view_frames       # árvore: world → odom → chassis → sensores
 ```
+
+## Árvore de transformações (tf2)
+
+O modelo do robô já define todos os frames dos sensores, então a árvore é montada
+automaticamente — não é preciso publicar TF no código dos nós de sensores:
+
+```
+world
+└── odom                                  static_transform_publisher (no robo_gazebo.launch.py)
+    ├── chassis                           diff_drive_controller (enable_odom_tf: true)
+    │   ├── left_wheel                    joint_state_broadcaster + robot_state_publisher
+    │   ├── right_wheel
+    │   ├── imu_link                      robot_state_publisher (juntas fixas do .xacro)
+    │   ├── gps_link
+    │   ├── camera_link
+    │   │   └── camera_optical_link       (convenção óptica: z frente, x direita, y baixo)
+    │   └── lidar_link
+    └── pose_estimada                     estimador_pose (GPS + IMU, só com a trajetória em 8)
+```
+
+| Elo | Quem publica | Onde é definido |
+|---|---|---|
+| `world` → `odom` | `static_transform_publisher` (nó `world_para_odom`) | `launch/robo_gazebo.launch.py` |
+| `odom` → `chassis` | `diff_drive_controller` | `config/controllers.yaml`, `enable_odom_tf: true` |
+| `chassis` → sensores e rodas | `robot_state_publisher` | juntas do `models/my_robot/*.xacro` |
+| `odom` → `pose_estimada` | `estimador_pose` | `config/trajetoria_8.yaml`, `frame_estimado` |
+
+O `world` é a única frame que ninguém publicaria sozinho: o `odom` vem do controlador
+e os links do robô do `robot_state_publisher`. Como o robô nasce na origem do mundo
+(`spawn_entity` com `x=y=0`), o `odom` começa coincidindo com o `world`, daí a
+transformada identidade. É também o motivo de o `/gps/xyz` publicar em `odom`
+(ENU do mundo = `odom`) e de o RViz usar `odom` como *Fixed Frame*.
+
+O `pose_estimada` é irmão do `chassis`, não pai: quem manda no `odom` → `chassis` é o
+controlador, então sobrescrevê-lo com a pose dos sensores quebraria a árvore. Assim dá
+para ver no RViz a pose estimada (GPS + IMU) ao lado da real (`/odom`). Desligue com
+`frame_estimado: ''` no YAML. Note que a árvore do ROS não lista a raiz como chave
+(ela só aparece como `parent`), por isso o `arvore_tf` a mostra sem taxa.
+
+Inspecionar:
+
+```bash
+# com a trajetória em 8 rodando: a árvore aparece sozinha no terminal
+ros2 launch sensores trajetoria_8.launch.py
+ros2 launch sensores trajetoria_8.launch.py tf_pdf:=~/arvore.pdf   # + PDF (graphviz)
+ros2 launch sensores trajetoria_8.launch.py arvore_tf:=false       # sem a árvore
+
+# a qualquer momento, com qualquer launch
+ros2 run sensores arvore_tf                  # só a árvore, no terminal
+ros2 run tf2_tools view_frames               # grava frames.pdf (requer tf2-tools)
+ros2 run tf2_ros tf2_echo world lidar_link   # matriz entre dois frames
+ros2 run tf2_ros tf2_echo odom pose_estimada
+ros2 topic echo /tf_static --once
+```
+
+Se um consumidor precisar de outro referencial (por exemplo, o ponto do GPS no
+`chassis` em vez de no `odom`), converta em tempo de execução com o `tf2_ros`
+(`Buffer.lookup_transform`) em vez de criar mais juntas fixas.
 
 ## Ruído dos sensores
 
@@ -122,6 +180,8 @@ referencial coincide com o `odom`. A origem do YAML (`origem_lat/lon/alt`) deve 
 | `sensores/ruido.py` | Quaternion ↔ rpy e ruído gaussiano na orientação (sem ROS) |
 | `sensores/nuvem.py` | Varredura do lidar → pontos 3D (sem ROS) |
 | `sensores/gps_xyz.py`, `imu_orientacao.py`, `scan_para_nuvem.py` | Nós ROS finos que usam os módulos acima |
+| `sensores/arvore.py` | Leitura do YAML do `tf2` e desenho da árvore em texto/DOT (sem ROS) |
+| `sensores/arvore_tf.py` | Nó que imprime a árvore de transformações e, opcionalmente, grava o PDF |
 | `sensores/cmd_vel_relay.py` | Repassa `/cmd_vel` para o `diff_drive_controller` |
 | `launch/robo_gazebo.launch.py`, `launch/sensores.launch.py` | Simulação e processamento dos sensores |
 
@@ -152,6 +212,8 @@ colcon test-result --verbose
 | `test_nuvem.py` | Ângulos e distâncias dos pontos; leituras `inf`/`NaN`/fora do alcance são descartadas |
 | `test_modelo.py` | 4 sensores, plugins e tópicos, ruído gaussiano em todos, `escala_ruido` multiplica os desvios, corpo visual, árvore de links |
 | `test_configuracao.py` | Origem do GPS no YAML igual à do mundo; arquivos instalados existem |
+| `test_tf.py` | Frames dos sensores no URDF, todos os links chegam ao `chassis`, `world` e `odom` publicados |
+| `test_arvore.py` | Leitura do YAML do `tf2`, desenho em texto, raiz só como `parent`, frames faltando |
 
 Atividade 4:
 
@@ -163,9 +225,7 @@ colcon build --packages-select sensores
 source install/setup.bash
 source /usr/share/gazebo/setup.bash
 
-Usando odom:
-ros2 launch sensores trajetoria_8.launch.py topico_pose:=/odom escala_ruido:=0.0 omega:=0.2
+# Terminal único: simulador + sensores + estimador + controle
+ros2 launch sensores trajetoria_8.launch.py                     # ruído normal
 
-Usando os sensores:
-
-ros2 launch sensores trajetoria_8.launch.py topico_pose:=/pose_estimada escala_ruido:=0.0 omega:=0.2
+ros2 run tf2_ros tf2_echo odom pose_estimada

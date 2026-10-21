@@ -44,6 +44,7 @@ setup(
             'scan_para_nuvem = sensores.scan_para_nuvem:main',
             'estimador_pose = sensores.estimador_pose:main',
             'trajetoria_8 = sensores.trajetoria_8:main',
+            'arvore_tf = sensores.arvore_tf:main',
         ],
     },
 )

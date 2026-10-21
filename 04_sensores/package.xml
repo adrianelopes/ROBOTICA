@@ -20,6 +20,9 @@
   <exec_depend>gazebo_plugins</exec_depend>
   <exec_depend>xacro</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <!-- opcional: ros2 run tf2_tools view_frames, citado no README -->
+  <exec_depend>tf2_tools</exec_depend>
   <exec_depend>gazebo_ros2_control</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>diff_drive_controller</exec_depend>

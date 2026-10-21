@@ -2,13 +2,14 @@
 
 import math
 
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, TransformStamped
 from nav_msgs.msg import Odometry
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Imu
+from tf2_ros import TransformBroadcaster
 
 from .ruido import quaternion_para_rpy
 
@@ -19,6 +20,10 @@ class EstimadorPose(Node):
         super().__init__('estimador_pose')
         saida = self.declare_parameter('topico_saida', '/pose_estimada').value
         self.frame_id = self.declare_parameter('frame_id', 'odom').value
+        # frame opcional para ver a pose estimada na árvore de transformações.
+        # É um filho do odom separado de chassis: o odom -> chassis é do controlador.
+        self.frame_estimado = self.declare_parameter(
+            'frame_estimado', 'pose_estimada').value
         # posições em x no referencial do chassi (ver os joints do xacro)
         self.gps_x = self.declare_parameter('gps_x_chassi', -0.12).value
         self.eixo_x = self.declare_parameter('eixo_x_chassi', 0.1).value
@@ -30,10 +35,14 @@ class EstimadorPose(Node):
         self.yaw = None   # só há pose depois da primeira leitura da IMU
 
         self.pub = self.create_publisher(Odometry, saida, 10)
+        self.tf = TransformBroadcaster(self)
         self.create_subscription(Imu, '/imu/data', self._imu_callback, qos_profile_sensor_data)
         self.create_subscription(PointStamped, '/gps/xyz', self._gps_callback, 10)
         self.get_logger().info(f'/gps/xyz + /imu/data -> {saida} | sinal do GPS: '
                                f'({self.sinal_x:+.0f}, {self.sinal_y:+.0f})')
+        if self.frame_estimado:
+            self.get_logger().info(
+                f'Árvore: {self.frame_id} -> {self.frame_estimado} (pose estimada)')
 
     def _imu_callback(self, msg):
         q = msg.orientation
@@ -61,6 +70,16 @@ class EstimadorPose(Node):
         odom.pose.pose.orientation.z = math.sin(self.yaw / 2.0)
         odom.pose.pose.orientation.w = math.cos(self.yaw / 2.0)
         self.pub.publish(odom)
+
+        if self.frame_estimado:
+            # mesma pose, publicada como frame próprio para a árvore de transformações
+            tf = TransformStamped()
+            tf.header = odom.header
+            tf.child_frame_id = self.frame_estimado
+            tf.transform.translation.x = x
+            tf.transform.translation.y = y
+            tf.transform.rotation = odom.pose.pose.orientation
+            self.tf.sendTransform(tf)
 
 
 def main(args=None):

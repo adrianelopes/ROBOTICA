@@ -35,6 +35,24 @@ def _criar_simulacao(context):
                      'use_sim_time': True}],
     )
 
+    # Raiz da árvore de transformações (REP-105: world -> odom -> chassis -> sensores).
+    # O mundo do Gazebo é a única frame que ninguém publica: o `odom` vem do
+    # diff_drive_controller e os links do robô vêm do robot_state_publisher.
+    # O robô nasce na origem do mundo (spawn_entity com x=y=0), então o `odom` começa
+    # coincidindo com o `world`. Não use use_sim_time aqui: transformada estática não
+    # depende do relógio e o nó pode subir antes do /clock do Gazebo.
+    tf_world_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='world_para_odom',
+        output='screen',
+        arguments=[
+            '--x', '0', '--y', '0', '--z', '0',
+            '--roll', '0', '--pitch', '0', '--yaw', '0',
+            '--frame-id', 'world', '--child-frame-id', 'odom',
+        ],
+    )
+
     spawn_entity = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
@@ -74,6 +92,7 @@ def _criar_simulacao(context):
     return [
         gazebo,
         robot_state_publisher,
+        tf_world_odom,
         spawn_entity,
         start_controllers,
         cmd_vel_relay,
