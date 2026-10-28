@@ -1,0 +1,242 @@
+<?xml version="1.0"?>
+<!--
+  Sensores do my_robot: IMU, GPS, câmera RGB frontal e lidar 2D frontal.
+  Todos têm um corpo visual no robô, publicam em tópicos ROS 2 e usam ruído gaussiano.
+  O argumento escala_ruido multiplica todos os desvios-padrão (0 = sem ruído).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="escala_ruido" default="1.0"/>
+  <xacro:property name="k" value="$(arg escala_ruido)"/>
+
+  <!-- Desvios-padrão base (multiplicados por k) -->
+  <xacro:property name="imu_gyro_std" value="${k * 0.01}"/>        <!-- rad/s -->
+  <xacro:property name="imu_gyro_bias_std" value="${k * 0.0005}"/>
+  <xacro:property name="imu_accel_std" value="${k * 0.05}"/>       <!-- m/s^2 -->
+  <xacro:property name="imu_accel_bias_std" value="${k * 0.005}"/>
+  <xacro:property name="gps_horizontal_std" value="${k * 0.1}"/>   <!-- m -->
+  <xacro:property name="gps_vertical_std" value="${k * 0.2}"/>     <!-- m -->
+  <xacro:property name="gps_vel_std" value="${k * 0.02}"/>         <!-- m/s -->
+  <xacro:property name="camera_std" value="${k * 0.007}"/>         <!-- fração da intensidade (0-1) -->
+  <xacro:property name="lidar_std" value="${k * 0.01}"/>           <!-- m -->
+
+  <!-- Ruído no formato <noise type="gaussian"> (IMU e GPS) -->
+  <xacro:macro name="ruido_atributo" params="std bias_mean:=0.0 bias_std:=0.0">
+    <noise type="gaussian">
+      <mean>0.0</mean>
+      <stddev>${std}</stddev>
+      <bias_mean>${bias_mean}</bias_mean>
+      <bias_stddev>${bias_std}</bias_stddev>
+    </noise>
+  </xacro:macro>
+
+  <!-- Ruído no formato <noise><type>gaussian</type> (câmera e lidar) -->
+  <xacro:macro name="ruido_tipo" params="std">
+    <noise>
+      <type>gaussian</type>
+      <mean>0.0</mean>
+      <stddev>${std}</stddev>
+    </noise>
+  </xacro:macro>
+
+  <!-- ============================ IMU ============================ -->
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.04 0.04 0.01"/>
+      </geometry>
+      <material name="imu_azul">
+        <color rgba="0.1 0.2 0.9 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.09" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="imu_link">
+    <material>Gazebo/Blue</material>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>false</visualize>
+      <imu>
+        <angular_velocity>
+          <x><xacro:ruido_atributo std="${imu_gyro_std}" bias_mean="0.001" bias_std="${imu_gyro_bias_std}"/></x>
+          <y><xacro:ruido_atributo std="${imu_gyro_std}" bias_mean="0.001" bias_std="${imu_gyro_bias_std}"/></y>
+          <z><xacro:ruido_atributo std="${imu_gyro_std}" bias_mean="0.001" bias_std="${imu_gyro_bias_std}"/></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><xacro:ruido_atributo std="${imu_accel_std}" bias_mean="0.02" bias_std="${imu_accel_bias_std}"/></x>
+          <y><xacro:ruido_atributo std="${imu_accel_std}" bias_mean="0.02" bias_std="${imu_accel_bias_std}"/></y>
+          <z><xacro:ruido_atributo std="${imu_accel_std}" bias_mean="0.02" bias_std="${imu_accel_bias_std}"/></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <!-- orientação ainda sem ruído, o nó imu_orientacao a ruidifica e publica /imu/data -->
+          <namespace>/imu</namespace>
+          <remapping>~/out:=data_bruto</remapping>
+        </ros>
+        <frame_name>imu_link</frame_name>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ============================ GPS ============================ -->
+  <link name="gps_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.035" length="0.015"/>
+      </geometry>
+      <material name="gps_branco">
+        <color rgba="0.95 0.95 0.95 1.0"/>
+      </material>
+    </visual>
+    <visual>
+      <origin xyz="0 0 -0.0625" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.004" length="0.11"/>
+      </geometry>
+      <material name="gps_branco"/>
+    </visual>
+  </link>
+
+  <joint name="gps_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="gps_link"/>
+    <origin xyz="-0.12 0 0.2" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="gps_link">
+    <material>Gazebo/White</material>
+    <sensor name="gps_sensor" type="gps">
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      <gps>
+        <position_sensing>
+          <horizontal><xacro:ruido_atributo std="${gps_horizontal_std}"/></horizontal>
+          <vertical><xacro:ruido_atributo std="${gps_vertical_std}"/></vertical>
+        </position_sensing>
+        <velocity_sensing>
+          <horizontal><xacro:ruido_atributo std="${gps_vel_std}"/></horizontal>
+          <vertical><xacro:ruido_atributo std="${gps_vel_std}"/></vertical>
+        </velocity_sensing>
+      </gps>
+      <plugin name="gps_plugin" filename="libgazebo_ros_gps_sensor.so">
+        <ros>
+          <namespace>/gps</namespace>
+          <remapping>~/out:=fix</remapping>
+          <remapping>~/vel:=vel</remapping>
+        </ros>
+        <frame_name>gps_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ====================== Câmera RGB frontal ====================== -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.03 0.06 0.03"/>
+      </geometry>
+      <material name="camera_cinza">
+        <color rgba="0.25 0.25 0.25 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="camera_link"/>
+    <origin xyz="0.19 0 0.1" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Convenção óptica (z para frente, x para a direita, y para baixo) usada no header da imagem -->
+  <link name="camera_optical_link"/>
+
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_link"/>
+    <origin xyz="0 0 0" rpy="-1.5707963 0 -1.5707963"/>
+  </joint>
+
+  <gazebo reference="camera_link">
+    <material>Gazebo/DarkGrey</material>
+    <sensor name="camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <update_rate>15</update_rate>
+      <visualize>false</visualize>
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>20.0</far>
+        </clip>
+        <xacro:ruido_tipo std="${camera_std}"/>
+      </camera>
+      <plugin name="camera_plugin" filename="libgazebo_ros_camera.so">
+        <camera_name>camera</camera_name>
+        <frame_name>camera_optical_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ======================== Lidar 2D frontal ======================== -->
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.035" length="0.04"/>
+      </geometry>
+      <material name="lidar_preto">
+        <color rgba="0.05 0.05 0.05 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="lidar_link"/>
+    <origin xyz="0.08 0 0.14" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="lidar_link">
+    <material>Gazebo/Black</material>
+    <sensor name="lidar_sensor" type="ray">
+      <always_on>true</always_on>
+      <update_rate>10</update_rate>
+      <visualize>false</visualize>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1.0</resolution>
+            <min_angle>-1.5707963</min_angle>
+            <max_angle>1.5707963</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <xacro:ruido_tipo std="${lidar_std}"/>
+      </ray>
+      <plugin name="lidar_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <remapping>~/out:=scan</remapping>
+        </ros>
+        <output_type>sensor_msgs/LaserScan</output_type>
+        <frame_name>lidar_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>

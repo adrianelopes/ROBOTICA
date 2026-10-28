@@ -1,0 +1,53 @@
+# Filtro de Kalman estendido (robot_localization) - exercício 1.1
+# Ordem das 15 variáveis de cada matriz *_config:
+#   x, y, z,  roll, pitch, yaw,  vx, vy, vz,  vroll, vpitch, vyaw,  ax, ay, az
+
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: true
+    frequency: 50.0          # Hz: quantas vezes por segundo o filtro publica
+    two_d_mode: true         # robô no plano: só x, y, yaw e as velocidades planares contam
+    publish_tf: false        # o odom -> chassis já é publicado pelo diff_drive_controller
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: chassis
+    world_frame: odom        # a estimativa é dada em relação ao odom
+
+    # --- Rodas (/odom): só as VELOCIDADES (vx e vyaw). A pose das rodas desvia do mundo
+    #     (o yaw vai girando), então não entra: quem dá a posição é o GPS.
+    odom0: /odom
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  false, false,
+                   false, false, true,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_differential: false
+    odom0_relative: false
+
+    # --- GPS (/pose_estimada): só x e y. O yaw dela vem da IMU, que entra logo abaixo.
+    odom1: /pose_estimada
+    odom1_config: [true,  true,  false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
+    odom1_queue_size: 10
+    odom1_differential: false
+    odom1_relative: false
+
+    # --- IMU (/imu/data): yaw absoluto e velocidade angular em z.
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+    imu0_queue_size: 20
+    imu0_differential: false
+    imu0_relative: false
+    imu0_remove_gravitational_acceleration: false
+
+    # Q (process_noise_covariance) e a incerteza inicial ficam no padrão do pacote.
+    # Na 2.1 podemos ajustar o Q para comparar filtro mais "confiante no modelo" x "na medida".
