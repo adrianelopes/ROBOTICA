@@ -25,8 +25,7 @@ class EstimadorPose(Node):
         # Posições em x no referencial do chassi 
         self.gps_x = self.declare_parameter('gps_x_chassi', -0.12).value
         self.eixo_x = self.declare_parameter('eixo_x_chassi', 0.1).value
-        # O /gps/xyz vem com X e Y de sinal trocado em relação ao Gazebo 
-        sinal = self.declare_parameter('gps_sinal_xy', [-1.0, -1.0]).value
+        sinal = self.declare_parameter('gps_sinal_xy', [1.0, 1.0]).value
         self.sinal_x, self.sinal_y = float(sinal[0]), float(sinal[1])
 
         self.yaw = None   # Só há pose depois da primeira leitura da IMU

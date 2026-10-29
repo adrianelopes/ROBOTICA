@@ -154,6 +154,20 @@
     </plugin>
   </gazebo>
 
+  <!-- Ground truth (/ground_truth) com a pose real do chassi no mundo do Gazebo, sem ruído -->
+  <!-- Não use dois-pontos seguido de espaço nos comentários (quebra o gazebo_ros2_control) -->
+  <gazebo>
+    <plugin filename="libgazebo_ros_p3d.so" name="ground_truth">
+      <ros>
+        <remapping>odom:=ground_truth</remapping>
+      </ros>
+      <body_name>chassis</body_name>
+      <frame_name>world</frame_name>
+      <update_rate>50</update_rate>
+      <gaussian_noise>0.0</gaussian_noise>
+    </plugin>
+  </gazebo>
+
   <xacro:include filename="sensores.xacro"/>
 
 </robot>

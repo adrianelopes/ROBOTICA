@@ -1,9 +1,4 @@
 <?xml version="1.0"?>
-<!--
-  Sensores do my_robot: IMU, GPS, câmera RGB frontal e lidar 2D frontal.
-  Todos têm um corpo visual no robô, publicam em tópicos ROS 2 e usam ruído gaussiano.
-  O argumento escala_ruido multiplica todos os desvios-padrão (0 = sem ruído).
--->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:arg name="escala_ruido" default="1.0"/>
   <xacro:property name="k" value="$(arg escala_ruido)"/>
