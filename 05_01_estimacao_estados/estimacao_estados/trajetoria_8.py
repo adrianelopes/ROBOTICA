@@ -22,9 +22,9 @@ class Trajetoria8(Node):
         self.modo = self.declare_parameter('modo', 'realimentado').value
         self.k_ff = self.declare_parameter('k_ff', 1.0).value
         self.taxa = self.declare_parameter('taxa', 50.0).value
-        # pose usada no CONTROLE (saída do filtro de Kalman) e pose só para MEDIR o erro (/odom)
+        # pose usada no controle (EKF) e pose exata do Gazebo para medir o erro.
         topico_pose = self.declare_parameter('topico_pose', '/odometry/filtered').value
-        topico_real = self.declare_parameter('topico_real', '/odom').value
+        topico_real = self.declare_parameter('topico_real', '/groundtruth/odom').value
 
         kp, ki, kd = self.declare_parameter('pid_x', [1.5, 0.0, 0.0]).value
         self.pid_x = PID(kp, ki, kd, setpoint=0.0, sample_time=None)
@@ -34,7 +34,7 @@ class Trajetoria8(Node):
         self.pid_theta = PID(kp, ki, kd, setpoint=0.0, sample_time=None)
 
         self.pose = None        # Estimada pelo EKF: é a que o controle enxerga
-        self.pose_real = None   # /odom: só para comparar
+        self.pose_real = None   # groundtruth do Gazebo: só para comparar
         self.t0 = None
         self.t_anterior = None
         self.volta = 0
@@ -71,7 +71,7 @@ class Trajetoria8(Node):
         agora = self.get_clock().now().nanoseconds / 1e9
         if agora == 0.0:
             return
-        # Espera os sensores e também o /odom: ele só aparece depois que os controladores sobem
+        # Espera a estimativa e também o groundtruth do Gazebo.
         if self.pose is None or self.pose_real is None:
             self.get_logger().info('Aguardando pose dos sensores e /odom...',
                                    throttle_duration_sec=2.0)
@@ -82,7 +82,7 @@ class Trajetoria8(Node):
 
         xd, yd, theta_d, v_f, w_f = referencia(t, self.A, self.B, self.W)
 
-        # Erro que o controle ENXERGA (pose estimada) e erro REAL (odometria sem ruído)
+        # Erro visto pelo controle e erro contra a pose exata do Gazebo.
         ref_t = (xd, yd, theta_d, v_f, w_f)
         ex, ey, etheta = erros(ref_t, self.pose)
         erro_real = erros(ref_t, self.pose_real)

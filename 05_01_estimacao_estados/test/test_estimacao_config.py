@@ -88,7 +88,7 @@ def test_ekf_em_2d_e_com_tempo_de_simulacao(ekf):
 def test_controle_usa_o_filtro_de_kalman(traj):
     p = traj['trajetoria_8']['ros__parameters']
     assert p['topico_pose'] == '/odometry/filtered'
-    assert p['topico_real'] == '/odom'
+    assert p['topico_real'] == '/groundtruth/odom'
     assert p['modo'] == 'realimentado'
 
 

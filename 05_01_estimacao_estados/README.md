@@ -121,7 +121,8 @@ transformada identidade. É também o motivo de o `/gps/xyz` publicar em `odom`
 
 O `pose_estimada` é irmão do `chassis`, não pai: quem manda no `odom` → `chassis` é o
 controlador, então sobrescrevê-lo com a pose dos sensores quebraria a árvore. Assim dá
-para ver no RViz a pose estimada (GPS + IMU) ao lado da real (`/odom`). Desligue com
+para ver no RViz a pose estimada (GPS + IMU) ao lado da odometria das rodas (`/odom`).
+O groundtruth do modelo é publicado em `/groundtruth/odom`. Desligue com
 `frame_estimado: ''` no YAML. Note que a árvore do ROS não lista a raiz como chave
 (ela só aparece como `parent`), por isso o `arvore_tf` a mostra sem taxa.
 
@@ -217,8 +218,19 @@ O `trajetoria_8` agora controla com `/odometry/filtered` (saída do `ekf_node` d
 ```
 
 `/pose_estimada` continua existindo: é a **medida bruta** (GPS + IMU) que entra no filtro.
-`topico_pose` escolhe o que o controle enxerga: `/odometry/filtered` (padrão), `/pose_estimada` (bruto) ou `/odom`.
-O erro "real" publicado em `/trajetoria/erro_real` ainda usa `/odom` (odometria das rodas, não é o groundtruth do Gazebo).
+`topico_pose` escolhe o que o controle enxerga: `/odometry/filtered` (padrão), `/pose_estimada` (GPS + IMU) ou `/odom`.
+O groundtruth é obtido diretamente do plugin `gazebo_ros_state` em `/gazebo/model_states` e republicado como `/groundtruth/odom`; ele não usa os sensores nem a odometria das rodas. O erro `/trajetoria/erro_real` e o RMSE impresso pelo controle usam esse groundtruth.
+
+Para conferir os tópicos e preparar a comparação no PlotJuggler:
+
+```bash
+ros2 topic echo /groundtruth/odom --once
+ros2 topic echo /pose_estimada --once
+ros2 topic echo /odometry/filtered --once
+ros2 topic echo /trajetoria/desejada --once
+```
+
+No PlotJuggler, assine `/groundtruth/odom`, `/pose_estimada`, `/odometry/filtered` e `/trajetoria/desejada`. Para o gráfico XY, use posição `x` contra `y` de cada mensagem: groundtruth `pose.pose.position`, medida bruta `pose.pose.position`, EKF `pose.pose.position` e referência `pose.position`. Para yaw, use `orientation` em quaternion convertido para yaw ou compare trajetórias XY, como pedido no exercício.
 
 ```bash
 python3 -m pip install simple-pid

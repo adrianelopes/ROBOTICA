@@ -43,6 +43,7 @@ setup(
             'gps_xyz = estimacao_estados.gps_xyz:main',
             'scan_para_nuvem = estimacao_estados.scan_para_nuvem:main',
             'estimador_pose = estimacao_estados.estimador_pose:main',
+            'groundtruth_gazebo = estimacao_estados.groundtruth:main',
             'trajetoria_8 = estimacao_estados.trajetoria_8:main',
             'arvore_tf = estimacao_estados.arvore_tf:main',
         ],

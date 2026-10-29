@@ -23,4 +23,4 @@ trajetoria_8:
     pid_theta: [3.5, 0.0, 0.0]
     taxa: 50.0
     topico_pose: /odometry/filtered   # o controle usa o EKF (/pose_estimada = medida bruta; /odom = rodas)
-    topico_real: /odom            # só para medir o erro real
+    topico_real: /groundtruth/odom  # pose real do modelo publicada pelo Gazebo

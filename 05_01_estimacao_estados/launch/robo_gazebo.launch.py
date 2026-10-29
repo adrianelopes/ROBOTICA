@@ -82,6 +82,13 @@ def _criar_simulacao(context):
         output='screen',
     )
 
+    groundtruth = Node(
+        package='estimacao_estados',
+        executable='groundtruth_gazebo',
+        output='screen',
+        parameters=[{'use_sim_time': True}],
+    )
+
     start_controllers = RegisterEventHandler(
         OnProcessExit(
             target_action=spawn_entity,
@@ -93,6 +100,7 @@ def _criar_simulacao(context):
         gazebo,
         robot_state_publisher,
         tf_world_odom,
+        groundtruth,
         spawn_entity,
         start_controllers,
         cmd_vel_relay,

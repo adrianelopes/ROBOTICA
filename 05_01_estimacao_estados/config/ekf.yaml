@@ -1,6 +1,10 @@
 # Filtro de Kalman estendido (robot_localization) - exercício 1.1
 # Ordem das 15 variáveis de cada matriz *_config:
-#   x, y, z,  roll, pitch, yaw,  vx, vy, vz,  vroll, vpitch, vyaw,  ax, ay, az
+#   x, y, z,  
+#   roll, pitch, yaw,
+#   vx, vy, vz,
+#   vroll, vpitch, vyaw,
+#   ax, ay, az
 
 ekf_filter_node:
   ros__parameters:
@@ -48,6 +52,3 @@ ekf_filter_node:
     imu0_differential: false
     imu0_relative: false
     imu0_remove_gravitational_acceleration: false
-
-    # Q (process_noise_covariance) e a incerteza inicial ficam no padrão do pacote.
-    # Na 2.1 podemos ajustar o Q para comparar filtro mais "confiante no modelo" x "na medida".
