@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>sensores</name>
+  <name>estimacao_estados</name>
   <version>0.0.0</version>
   <description>Sensores (IMU, GPS, câmera RGB e lidar 2D) no robô my_robot</description>
   <maintainer email="todos@todo.todo">Fernanda, Renan e Adriane</maintainer>

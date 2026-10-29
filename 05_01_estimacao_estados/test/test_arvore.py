@@ -1,6 +1,7 @@
 """Confere a leitura e o desenho da árvore de transformações (sem ROS)."""
 
-from sensores.arvore import faltando, filhos_de, grafo_de_yaml, para_dot, raiz_de, renderizar
+from estimacao_estados.arvore import (
+    faltando, filhos_de, grafo_de_yaml, para_dot, raiz_de, renderizar)
 
 # Trecho real do `Buffer.all_frames_as_yaml()` (Humble), com a indentação do ROS
 YAML = """chassis:

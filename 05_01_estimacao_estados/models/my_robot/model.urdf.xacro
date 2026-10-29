@@ -18,7 +18,7 @@
     <visual>
       <origin xyz="0 0 0.05" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="file://$(find sensores)/models/my_robot/meshes/chassis.dae" scale="0.9 0.5 0.5"/>
+        <mesh filename="file://$(find estimacao_estados)/models/my_robot/meshes/chassis.dae" scale="0.9 0.5 0.5"/>
       </geometry>
     </visual>
 
@@ -147,7 +147,7 @@
   <!-- Plugin que sobe o controller_manager dentro do Gazebo -->
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-      <parameters>$(find sensores)/config/controllers.yaml</parameters>
+      <parameters>$(find estimacao_estados)/config/controllers.yaml</parameters>
       <ros>
         <remapping>diff_drive_controller/odom:=odom</remapping>
       </ros>

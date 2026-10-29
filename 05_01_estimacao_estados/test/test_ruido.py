@@ -3,7 +3,7 @@ import random
 
 import pytest
 
-from sensores.ruido import perturbar_quaternion, quaternion_para_rpy, rpy_para_quaternion
+from estimacao_estados.ruido import perturbar_quaternion, quaternion_para_rpy, rpy_para_quaternion
 
 
 def _mesma_rotacao(q1, q2):

@@ -38,7 +38,9 @@ def traj():
 
 def test_python_dos_pacotes_compila():
     """Pega erros de sintaxe/indentação nos nós, que o pytest só acha ao importar."""
-    for arquivo in [*RAIZ.glob('sensores/*.py'), *RAIZ.glob('launch/*.py'), RAIZ / 'setup.py']:
+    arquivos = [*RAIZ.glob('estimacao_estados/*.py'), *RAIZ.glob('launch/*.py'),
+                RAIZ / 'setup.py']
+    for arquivo in arquivos:
         ast.parse(arquivo.read_text(encoding='utf-8'), filename=str(arquivo))
 
 
@@ -91,7 +93,7 @@ def test_controle_usa_o_filtro_de_kalman(traj):
 
 
 def test_default_do_no_trajetoria_e_o_filtro():
-    fonte = _texto('sensores/trajetoria_8.py')
+    fonte = _texto('estimacao_estados/trajetoria_8.py')
     assert "'topico_pose', '/odometry/filtered'" in fonte
     assert "super().__init__('trajetoria_8')" in fonte
 
@@ -109,13 +111,13 @@ def test_launch_da_trajetoria_sobe_o_ekf_e_usa_o_filtro_por_padrao():
 def test_entry_points_apontam_para_modulos_existentes():
     fonte = _texto('setup.py')
     for nome in ('trajetoria_8', 'estimador_pose'):
-        assert f"'{nome} = sensores.{nome}:main'" in fonte
-        assert (RAIZ / 'sensores' / f'{nome}.py').is_file()
+        assert f"'{nome} = estimacao_estados.{nome}:main'" in fonte
+        assert (RAIZ / 'estimacao_estados' / f'{nome}.py').is_file()
 
 
 def test_estimador_pose_inicializa_yaw_antes_do_primeiro_gps():
     """O callback do GPS testa self.yaw: ele precisa existir desde o __init__."""
-    arvore = ast.parse(_texto('sensores/estimador_pose.py'))
+    arvore = ast.parse(_texto('estimacao_estados/estimador_pose.py'))
     init = next(f for c in arvore.body if isinstance(c, ast.ClassDef)
                 for f in c.body if isinstance(f, ast.FunctionDef) and f.name == '__init__')
     atribuidos = {t.attr for n in ast.walk(init) if isinstance(n, ast.Assign)

@@ -12,7 +12,7 @@ LAUNCH = RAIZ / 'launch' / 'robo_gazebo.launch.py'
 
 @pytest.fixture
 def robo(monkeypatch):
-    # $(find sensores) aponta para a pasta do código-fonte (não exige o pacote instalado)
+    # $(find estimacao_estados) aponta para a pasta do código-fonte (não exige o pacote instalado)
     from xacro import substitution_args
     monkeypatch.setattr(substitution_args, '_eval_find', lambda pacote: str(RAIZ))
     doc = xacro.process_file(str(RAIZ / 'models' / 'my_robot' / 'model.urdf.xacro'))

@@ -10,12 +10,12 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('sensores')
+    pkg_share = get_package_share_directory('estimacao_estados')
     params = os.path.join(pkg_share, 'config', 'sensores.yaml')
     escala = ParameterValue(LaunchConfiguration('escala_ruido'), value_type=float)
 
     imu_orientacao = Node(
-        package='sensores',
+        package='estimacao_estados',
         executable='imu_orientacao',
         name='imu_orientacao',
         output='screen',
@@ -23,7 +23,7 @@ def generate_launch_description():
     )
 
     gps_xyz = Node(
-        package='sensores',
+        package='estimacao_estados',
         executable='gps_xyz',
         name='gps_xyz',
         output='screen',
@@ -31,7 +31,7 @@ def generate_launch_description():
     )
 
     scan_para_nuvem = Node(
-        package='sensores',
+        package='estimacao_estados',
         executable='scan_para_nuvem',
         name='scan_para_nuvem',
         output='screen',

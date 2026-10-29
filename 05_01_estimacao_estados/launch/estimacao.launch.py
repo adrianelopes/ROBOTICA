@@ -10,7 +10,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('sensores')
+    pkg_share = get_package_share_directory('estimacao_estados')
     escala = LaunchConfiguration('escala_ruido')
 
     # Gazebo + robô + controladores (o params_file sobe o /clock de 10 para 100 Hz)
@@ -35,7 +35,7 @@ def generate_launch_description():
 
     # GPS + IMU -> /pose_estimada (medida bruta, com a covariância R do GPS)
     estimador = Node(
-        package='sensores', executable='estimador_pose', name='estimador_pose',
+        package='estimacao_estados', executable='estimador_pose', name='estimador_pose',
         output='screen',
         parameters=[os.path.join(pkg_share, 'config', 'trajetoria_8.yaml'),
                     {'escala_ruido': ParameterValue(escala, value_type=float)}])

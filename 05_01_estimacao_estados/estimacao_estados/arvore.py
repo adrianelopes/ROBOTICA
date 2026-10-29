@@ -2,7 +2,7 @@
 
 
 def grafo_de_yaml(texto):
-    """Converte o YAML de `Buffer.all_frames_as_yaml()` em {filho: {parent, ...}}."""
+    """Conversão do YAML de `Buffer.all_frames_as_yaml()` em {filho: {parent, ...}}."""
     pai, grafo = None, {}
     for linha in texto.splitlines():
         if not linha.strip():

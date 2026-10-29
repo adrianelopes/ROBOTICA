@@ -11,7 +11,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('sensores')
+    pkg_share = get_package_share_directory('estimacao_estados')
     escala = LaunchConfiguration('escala_ruido')
 
     # Gazebo + robô + sensores + estimador (/pose_estimada) + EKF (/odometry/filtered)
@@ -28,7 +28,8 @@ def generate_launch_description():
 
     # os argumentos do launch vencem o YAML (a ordem da lista importa)
     trajetoria = Node(
-        package='sensores', executable='trajetoria_8', name='trajetoria_8', output='screen',
+        package='estimacao_estados', executable='trajetoria_8', name='trajetoria_8',
+        output='screen',
         parameters=[params, {
             'topico_pose': LaunchConfiguration('topico_pose'),
             'omega': ParameterValue(LaunchConfiguration('omega'), value_type=float),
@@ -38,7 +39,7 @@ def generate_launch_description():
     # Só aparece quando todos os frames da simulação existem, então não polui a saída
     # com a árvore pela metade enquanto o Gazebo sobe.
     arvore = Node(
-        package='sensores', executable='arvore_tf', name='arvore_tf', output='screen',
+        package='estimacao_estados', executable='arvore_tf', name='arvore_tf', output='screen',
         parameters=[{
             'periodo': ParameterValue(LaunchConfiguration('tf_periodo'), value_type=float),
             'pdf': LaunchConfiguration('tf_pdf'),

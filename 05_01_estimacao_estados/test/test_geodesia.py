@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from sensores.geodesia import (
+from estimacao_estados.geodesia import (
     ACHATAMENTO, ConversorGps, EXCENTRICIDADE_2, geodetica_para_ecef, SEMI_EIXO_MAIOR)
 
 LAT, LON, ALT = -7.1396, -34.8450, 5.0

@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from sensores.nuvem import scan_para_pontos
+from estimacao_estados.nuvem import scan_para_pontos
 
 
 def test_angulos_cardeais():

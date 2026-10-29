@@ -1,4 +1,4 @@
-# sensores
+# estimacao_estados
 
 Pacote ROS 2 (Humble) da prática 04, seção 1: adiciona ao robô `my_robot` (Gazebo Classic) uma **IMU**, um **GPS**, uma **câmera RGB frontal** e um **lidar 2D frontal**. Todos aparecem no modelo do robô, publicam em tópicos ROS 2 e usam ruído gaussiano.
 
@@ -32,7 +32,7 @@ Este repositório é uma pasta de pacotes. Coloque-o em `src/` de um workspace:
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 git clone <url-deste-repositorio> ROBOTICA      # ou copie a pasta
 cd ~/ros2_ws
-colcon build --packages-select sensores
+colcon build --packages-select estimacao_estados
 source install/setup.bash
 ```
 
@@ -42,12 +42,12 @@ Três terminais (em cada um: `source ~/ros2_ws/install/setup.bash`).
 
 ```bash
 # Terminal 1: Gazebo + robô com sensores + controladores
-ros2 launch sensores robo_gazebo.launch.py
+ros2 launch estimacao_estados robo_gazebo.launch.py
 ```
 
 ```bash
 # Terminal 2: nós de processamento (IMU, GPS em XYZ, nuvem de pontos) + RViz
-ros2 launch sensores sensores.launch.py
+ros2 launch estimacao_estados sensores.launch.py
 ```
 
 ```bash
@@ -58,8 +58,8 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 Opções:
 
 ```bash
-ros2 launch sensores sensores.launch.py rviz:=false          # sem RViz
-ros2 launch sensores robo_gazebo.launch.py world:=/caminho/outro.world
+ros2 launch estimacao_estados sensores.launch.py rviz:=false          # sem RViz
+ros2 launch estimacao_estados robo_gazebo.launch.py world:=/caminho/outro.world
 ```
 
 ## Exercício 1.2: visualizar os dados
@@ -139,8 +139,8 @@ plugin do Gazebo, então o nó `imu_orientacao` soma ruído gaussiano em roll, p
 Um único parâmetro multiplica todos os desvios-padrão (útil para o exercício 2.1). Use o mesmo valor nos dois launches:
 
 ```bash
-ros2 launch sensores robo_gazebo.launch.py escala_ruido:=5.0
-ros2 launch sensores sensores.launch.py escala_ruido:=5.0
+ros2 launch estimacao_estados robo_gazebo.launch.py escala_ruido:=5.0
+ros2 launch estimacao_estados sensores.launch.py escala_ruido:=5.0
 ```
 
 `escala_ruido:=0.0` desliga o ruído.
@@ -149,7 +149,7 @@ ros2 launch sensores sensores.launch.py escala_ruido:=5.0
 
 O mundo `worlds/sensores.world` define a origem geográfica em `<spherical_coordinates>`
 (-7.1396°, -34.8450°, 5 m). O nó `gps_xyz` converte cada `NavSatFix` para o referencial local ENU
-dessa origem (WGS84 → ECEF → ENU, em `sensores/geodesia.py`): X leste, Y norte, Z para cima. Como o robô nasce na origem do mundo, esse
+dessa origem (WGS84 → ECEF → ENU, em `estimacao_estados/geodesia.py`): X leste, Y norte, Z para cima. Como o robô nasce na origem do mundo, esse
 referencial coincide com o `odom`.
 
 O mundo usa `<heading_deg>180</heading_deg>` de propósito. O Gazebo Classic tem um bug: com heading 0,
@@ -164,13 +164,13 @@ ele trata o mundo como oeste-sul-cima, e as leituras do GPS saem espelhadas pela
 | `models/my_robot/model.urdf.xacro` | Robô (chassi, rodas, `ros2_control`); inclui `sensores.xacro` |
 | `models/my_robot/sensores.xacro` | Links, juntas, corpos visuais, plugins e ruído dos quatro sensores |
 | `worlds/sensores.world` | Chão, obstáculos coloridos e coordenadas esféricas (GPS) |
-| `sensores/geodesia.py` | Lat/lon/alt → ECEF → ENU (sem ROS) |
-| `sensores/ruido.py` | Quaternion ↔ rpy e ruído gaussiano na orientação (sem ROS) |
-| `sensores/nuvem.py` | Varredura do lidar → pontos 3D (sem ROS) |
-| `sensores/gps_xyz.py`, `imu_orientacao.py`, `scan_para_nuvem.py` | Nós ROS finos que usam os módulos acima |
-| `sensores/arvore.py` | Leitura do YAML do `tf2` e desenho da árvore em texto/DOT (sem ROS) |
-| `sensores/arvore_tf.py` | Nó que imprime a árvore de transformações e, opcionalmente, grava o PDF |
-| `sensores/cmd_vel_relay.py` | Repassa `/cmd_vel` para o `diff_drive_controller` |
+| `estimacao_estados/geodesia.py` | Lat/lon/alt → ECEF → ENU (sem ROS) |
+| `estimacao_estados/ruido.py` | Quaternion ↔ rpy e ruído gaussiano na orientação (sem ROS) |
+| `estimacao_estados/nuvem.py` | Varredura do lidar → pontos 3D (sem ROS) |
+| `estimacao_estados/gps_xyz.py`, `imu_orientacao.py`, `scan_para_nuvem.py` | Nós ROS finos que usam os módulos acima |
+| `estimacao_estados/arvore.py` | Leitura do YAML do `tf2` e desenho da árvore em texto/DOT (sem ROS) |
+| `estimacao_estados/arvore_tf.py` | Nó que imprime a árvore de transformações e, opcionalmente, grava o PDF |
+| `estimacao_estados/cmd_vel_relay.py` | Repassa `/cmd_vel` para o `diff_drive_controller` |
 | `launch/robo_gazebo.launch.py`, `launch/sensores.launch.py` | Simulação e processamento dos sensores |
 
 A lógica fica em módulos sem dependência de ROS, para testar sem simulador (mesmo padrão de `manobras.py`/`continuo.py` na prática 03).
@@ -188,8 +188,8 @@ Pelo colcon (inclui flake8 e pep257):
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-select sensores
-colcon test --packages-select sensores --event-handlers console_direct+
+colcon build --packages-select estimacao_estados
+colcon test --packages-select estimacao_estados --event-handlers console_direct+
 colcon test-result --verbose
 ```
 
@@ -222,13 +222,13 @@ O erro "real" publicado em `/trajetoria/erro_real` ainda usa `/odom` (odometria 
 
 ```bash
 python3 -m pip install simple-pid
-cd ~/ros2_ws && colcon build --packages-select sensores && source install/setup.bash
+cd ~/ros2_ws && colcon build --packages-select estimacao_estados && source install/setup.bash
 source /usr/share/gazebo/setup.bash
 
 # Gazebo + sensores + estimador + EKF + controle (um terminal só)
-ros2 launch sensores trajetoria_8.launch.py
-ros2 launch sensores trajetoria_8.launch.py escala_ruido:=5.0              # mais ruído
-ros2 launch sensores trajetoria_8.launch.py topico_pose:=/pose_estimada    # sem filtro, para comparar
+ros2 launch estimacao_estados trajetoria_8.launch.py
+ros2 launch estimacao_estados trajetoria_8.launch.py escala_ruido:=5.0              # mais ruído
+ros2 launch estimacao_estados trajetoria_8.launch.py topico_pose:=/pose_estimada    # sem filtro, para comparar
 ```
 
 ## Árvore de Transformação

@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'sensores'
+package_name = 'estimacao_estados'
 
 
 def package_files(directory):
@@ -38,13 +38,13 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'cmd_vel_relay = sensores.cmd_vel_relay:main',
-            'imu_orientacao = sensores.imu_orientacao:main',
-            'gps_xyz = sensores.gps_xyz:main',
-            'scan_para_nuvem = sensores.scan_para_nuvem:main',
-            'estimador_pose = sensores.estimador_pose:main',
-            'trajetoria_8 = sensores.trajetoria_8:main',
-            'arvore_tf = sensores.arvore_tf:main',
+            'cmd_vel_relay = estimacao_estados.cmd_vel_relay:main',
+            'imu_orientacao = estimacao_estados.imu_orientacao:main',
+            'gps_xyz = estimacao_estados.gps_xyz:main',
+            'scan_para_nuvem = estimacao_estados.scan_para_nuvem:main',
+            'estimador_pose = estimacao_estados.estimador_pose:main',
+            'trajetoria_8 = estimacao_estados.trajetoria_8:main',
+            'arvore_tf = estimacao_estados.arvore_tf:main',
         ],
     },
 )

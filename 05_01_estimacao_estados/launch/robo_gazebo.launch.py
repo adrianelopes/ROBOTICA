@@ -12,7 +12,7 @@ import xacro
 
 
 def _criar_simulacao(context):
-    pkg_share = get_package_share_directory('sensores')
+    pkg_share = get_package_share_directory('estimacao_estados')
     model_xacro = os.path.join(pkg_share, 'models', 'my_robot', 'model.urdf.xacro')
     escala = LaunchConfiguration('escala_ruido').perform(context)
     robot_description = xacro.process_file(
@@ -77,7 +77,7 @@ def _criar_simulacao(context):
     )
 
     cmd_vel_relay = Node(
-        package='sensores',
+        package='estimacao_estados',
         executable='cmd_vel_relay',
         output='screen',
     )
@@ -101,7 +101,7 @@ def _criar_simulacao(context):
 
 def generate_launch_description():
     mundo_padrao = os.path.join(
-        get_package_share_directory('sensores'), 'worlds', 'sensores.world')
+        get_package_share_directory('estimacao_estados'), 'worlds', 'sensores.world')
 
     return LaunchDescription([
         DeclareLaunchArgument(

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from sensores.trajetoria import (
+from estimacao_estados.trajetoria import (
     comando_realimentado, erro_no_corpo, erros, normaliza_angulo, referencia,
     yaw_from_quaternion)
 
@@ -41,7 +41,7 @@ def test_referencia_cabe_na_caixa_AxB():
 
 @pytest.mark.parametrize('t', [0.3, 2.0, 5.5, 11.0, 20.0])
 def test_feedforward_e_derivada_da_trajetoria(t):
-    """v = |velocidade|, theta = direção e w = dtheta/dt, por diferença finita."""
+    """Confere v = |velocidade|, theta = direção e w = dtheta/dt, por diferença finita."""
     h = 1e-5
     x0, y0, th0, v, w = referencia(t - h, A, B, W)
     x1, y1, th1, _, _ = referencia(t + h, A, B, W)

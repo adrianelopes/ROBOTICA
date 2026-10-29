@@ -43,7 +43,8 @@ def erro_no_corpo(ex, ey, theta):
 
 
 def comando_realimentado(ref, pose, k_ff, ctrl_x, ctrl_y, ctrl_theta, dt):
-    """Feedforward + realimentação sobre a pose recebida (real, bruta ou estimada).
+    """
+    Feedforward + realimentação sobre a pose recebida (real, bruta ou estimada).
 
     Cada ctrl_* é um callable ``f(erro_invertido, dt=dt)`` com setpoint 0, como o
     ``simple_pid.PID``. Retorna (v, w).

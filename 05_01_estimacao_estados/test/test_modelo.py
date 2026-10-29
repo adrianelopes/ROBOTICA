@@ -21,7 +21,7 @@ SENSORES = {
 
 @pytest.fixture
 def expandir(monkeypatch):
-    # $(find sensores) aponta para a pasta do código-fonte (não exige o pacote instalado)
+    # $(find estimacao_estados) aponta para a pasta do código-fonte (não exige o pacote instalado)
     from xacro import substitution_args
     monkeypatch.setattr(substitution_args, '_eval_find', lambda pacote: str(RAIZ))
 
