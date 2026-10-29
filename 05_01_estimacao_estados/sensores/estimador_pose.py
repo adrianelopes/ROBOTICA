@@ -22,13 +22,11 @@ class EstimadorPose(Node):
         # É um filho do odom separado de chassis: o odom -> chassis é do controlador.
         self.frame_estimado = self.declare_parameter(
             'frame_estimado', 'pose_estimada').value
-        # Posições em x no referencial do chassi 
+        # Posições em x no referencial do chassi
         self.gps_x = self.declare_parameter('gps_x_chassi', -0.12).value
         self.eixo_x = self.declare_parameter('eixo_x_chassi', 0.1).value
-        # O /gps/xyz vem com X e Y de sinal trocado em relação ao Gazebo 
-
-
-           sinal = self.declare_parameter('gps_sinal_xy', [1.0, 1.0]).value
+        # O /gps/xyz vem com X e Y de sinal trocado em relação ao Gazebo
+        sinal = self.declare_parameter('gps_sinal_xy', [1.0, 1.0]).value
         self.sinal_x, self.sinal_y = float(sinal[0]), float(sinal[1])
         # R do filtro de Kalman: incerteza da medida = (desvio do sensor * escala_ruido)^2.
         # O piso de 1 mm evita covariância zero (o filtro confiaria cegamente na medida).
@@ -38,6 +36,7 @@ class EstimadorPose(Node):
         self.var_pos = max(desvio_pos * escala, 1e-3) ** 2
         self.var_yaw = max(desvio_yaw * escala, 1e-3) ** 2
 
+        self.yaw = None   # só publica depois da primeira leitura da IMU
         self.pub = self.create_publisher(Odometry, saida, 10)
         self.tf = TransformBroadcaster(self)
         self.create_subscription(Imu, '/imu/data', self._imu_callback, qos_profile_sensor_data)
@@ -77,7 +76,7 @@ class EstimadorPose(Node):
         odom.pose.covariance[0] = self.var_pos    # variância de x
         odom.pose.covariance[7] = self.var_pos    # variância de y
         odom.pose.covariance[35] = self.var_yaw   # variância do yaw
-        
+
         self.pub.publish(odom)
 
         if self.frame_estimado:

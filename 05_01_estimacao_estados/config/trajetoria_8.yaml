@@ -1,4 +1,4 @@
-# Parâmetros da trajetória em 8 com sensores (exercício 2.1)
+# Parâmetros da trajetória em 8 com estado estimado pelo EKF (exercício 2.1)
 
 estimador_pose:
   ros__parameters:
@@ -22,5 +22,5 @@ trajetoria_8:
     pid_y: [3.0, 0.0, 0.0]
     pid_theta: [3.5, 0.0, 0.0]
     taxa: 50.0
-    topico_pose: /pose_estimada   # o controle usa GPS + IMU (troque por /odom para comparar)
+    topico_pose: /odometry/filtered   # o controle usa o EKF (/pose_estimada = medida bruta; /odom = rodas)
     topico_real: /odom            # só para medir o erro real

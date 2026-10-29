@@ -1,3 +1,4 @@
+"""Nó da trajetória em 8: controla com a pose estimada pelo filtro de Kalman."""
 
 import math
 
@@ -8,7 +9,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from simple_pid import PID
 
-from .trajetoria import normaliza_angulo, referencia, yaw_from_quaternion
+from .trajetoria import comando_realimentado, erros, referencia, yaw_from_quaternion
 
 
 class Trajetoria8(Node):
@@ -21,8 +22,8 @@ class Trajetoria8(Node):
         self.modo = self.declare_parameter('modo', 'realimentado').value
         self.k_ff = self.declare_parameter('k_ff', 1.0).value
         self.taxa = self.declare_parameter('taxa', 50.0).value
-        # pose usada no CONTROLE (sensores) e pose só para MEDIR o erro real (/odom)
-        topico_pose = self.declare_parameter('topico_pose', '/pose_estimada').value
+        # pose usada no CONTROLE (saída do filtro de Kalman) e pose só para MEDIR o erro (/odom)
+        topico_pose = self.declare_parameter('topico_pose', '/odometry/filtered').value
         topico_real = self.declare_parameter('topico_real', '/odom').value
 
         kp, ki, kd = self.declare_parameter('pid_x', [1.5, 0.0, 0.0]).value
@@ -32,7 +33,7 @@ class Trajetoria8(Node):
         kp, ki, kd = self.declare_parameter('pid_theta', [3.0, 0.0, 0.0]).value
         self.pid_theta = PID(kp, ki, kd, setpoint=0.0, sample_time=None)
 
-        self.pose = None        # Estimada (GPS + IMU): é a que o controle enxerga
+        self.pose = None        # Estimada pelo EKF: é a que o controle enxerga
         self.pose_real = None   # /odom: só para comparar
         self.t0 = None
         self.t_anterior = None
@@ -82,12 +83,12 @@ class Trajetoria8(Node):
         xd, yd, theta_d, v_f, w_f = referencia(t, self.A, self.B, self.W)
 
         # Erro que o controle ENXERGA (pose estimada) e erro REAL (odometria sem ruído)
-        x, y, theta = self.pose
-        ex, ey = xd - x, yd - y
-        etheta = normaliza_angulo(theta_d - theta)
-        xr, yr, thr = self.pose_real
+        ref_t = (xd, yd, theta_d, v_f, w_f)
+        ex, ey, etheta = erros(ref_t, self.pose)
+        erro_real = erros(ref_t, self.pose_real)
+        xr, yr, _ = self.pose_real
         self._publica_erro(self.pub_erro_est, ex, ey, etheta)
-        self._publica_erro(self.pub_erro_real, xd - xr, yd - yr, normaliza_angulo(theta_d - thr))
+        self._publica_erro(self.pub_erro_real, *erro_real)
 
         # RMSE de posição por volta (estimado x real)
         self.soma_est += ex ** 2 + ey ** 2
@@ -119,10 +120,8 @@ class Trajetoria8(Node):
         else:
             if dt <= 0.0:
                 return
-            exb = math.cos(theta) * ex + math.sin(theta) * ey
-            eyb = -math.sin(theta) * ex + math.cos(theta) * ey
-            v = self.k_ff * v_f + self.pid_x(-exb, dt=dt)
-            w = self.k_ff * w_f + self.pid_y(-eyb, dt=dt) + self.pid_theta(-etheta, dt=dt)
+            v, w = comando_realimentado(ref_t, self.pose, self.k_ff,
+                                        self.pid_x, self.pid_y, self.pid_theta, dt)
 
         cmd = Twist()
         cmd.linear.x = v

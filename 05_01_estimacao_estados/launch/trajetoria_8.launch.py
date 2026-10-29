@@ -14,20 +14,10 @@ def generate_launch_description():
     pkg_share = get_package_share_directory('sensores')
     escala = LaunchConfiguration('escala_ruido')
 
-    # Gazebo + robô + controladores (o params_file sobe o /clock de 10 para 100 Hz)
-    robo = IncludeLaunchDescription(
+    # Gazebo + robô + sensores + estimador (/pose_estimada) + EKF (/odometry/filtered)
+    estimacao = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_share, 'launch', 'robo_gazebo.launch.py')),
-        launch_arguments={
-            'params_file': os.path.join(pkg_share, 'config', 'gazebo_params.yaml'),
-            'escala_ruido': escala,
-        }.items(),
-    )
-
-    # nós da parte 1: /imu/data (com ruído na orientação), /gps/xyz, /scan/points
-    sensores = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_share, 'launch', 'sensores.launch.py')),
+            os.path.join(pkg_share, 'launch', 'estimacao.launch.py')),
         launch_arguments={
             'escala_ruido': escala,
             'rviz': LaunchConfiguration('rviz'),
@@ -36,8 +26,6 @@ def generate_launch_description():
 
     params = os.path.join(pkg_share, 'config', 'trajetoria_8.yaml')
 
-    estimador = Node(package='sensores', executable='estimador_pose',
-                     name='estimador_pose', output='screen', parameters=[params, {'escala_ruido': ParameterValue(escala, value_type=float)}])
     # os argumentos do launch vencem o YAML (a ordem da lista importa)
     trajetoria = Node(
         package='sensores', executable='trajetoria_8', name='trajetoria_8', output='screen',
@@ -63,8 +51,9 @@ def generate_launch_description():
                               description='Multiplica o desvio-padrão do ruído dos sensores'),
         DeclareLaunchArgument('rviz', default_value='false',
                               description='Abre o RViz da parte 1'),
-        DeclareLaunchArgument('topico_pose', default_value='/pose_estimada',
-                              description='Pose usada no controle (/odom = sem sensores)'),
+        DeclareLaunchArgument('topico_pose', default_value='/odometry/filtered',
+                              description='Pose usada no controle: /odometry/filtered (EKF), '
+                                          '/pose_estimada (GPS + IMU bruto) ou /odom (rodas)'),
         DeclareLaunchArgument('omega', default_value='0.2',
                               description='Frequência do 8 (rad/s); 0.2 = bem mais lento'),
         DeclareLaunchArgument('arvore_tf', default_value='true',
@@ -74,9 +63,7 @@ def generate_launch_description():
         DeclareLaunchArgument('tf_pdf', default_value='',
                               description='Se preenchido, grava a árvore também em PDF '
                                           '(ex.: ~/arvore.pdf; precisa de graphviz)'),
-        robo,
-        sensores,
-        estimador,
+        estimacao,
         trajetoria,
         arvore,
     ])

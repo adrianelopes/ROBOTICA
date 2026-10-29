@@ -202,19 +202,34 @@ colcon test-result --verbose
 | `test_configuracao.py` | Origem do GPS no YAML igual à do mundo; arquivos instalados existem |
 | `test_tf.py` | Frames dos sensores no URDF, todos os links chegam ao `chassis`, `world` e `odom` publicados |
 | `test_arvore.py` | Leitura do YAML do `tf2`, desenho em texto, raiz só como `parent`, frames faltando |
+| `test_trajetoria.py` | Referência em 8 (fecha a volta, feedforward = derivada), lei de controle, malha fechada simulada com pose ruidosa |
+| `test_estimacao_config.py` | Todo `.py` compila; EKF x tópicos x frames x `controllers.yaml`; controle usa `/odometry/filtered`; launch sobe o EKF |
 
-Atividade 4:
+## Exercício 2.1 (tópico 1): trajetória em 8 com o estado estimado pelo EKF
 
+O `trajetoria_8` agora controla com `/odometry/filtered` (saída do `ekf_node` do `robot_localization`,
+`config/ekf.yaml`). Fluxo dos dados:
 
+```
+/odom (rodas: vx, vyaw) ─┐
+/gps/xyz + /imu/data ──> estimador_pose ──> /pose_estimada (x, y) ─┼─> ekf_node ──> /odometry/filtered ──> trajetoria_8 ──> /cmd_vel
+/imu/data (yaw, vyaw) ───┘
+```
+
+`/pose_estimada` continua existindo: é a **medida bruta** (GPS + IMU) que entra no filtro.
+`topico_pose` escolhe o que o controle enxerga: `/odometry/filtered` (padrão), `/pose_estimada` (bruto) ou `/odom`.
+O erro "real" publicado em `/trajetoria/erro_real` ainda usa `/odom` (odometria das rodas, não é o groundtruth do Gazebo).
+
+```bash
 python3 -m pip install simple-pid
-
-cd ~/ros2_ws
-colcon build --packages-select sensores
-source install/setup.bash
+cd ~/ros2_ws && colcon build --packages-select sensores && source install/setup.bash
 source /usr/share/gazebo/setup.bash
 
-# Terminal único: simulador + sensores + estimador + controle
-ros2 launch sensores trajetoria_8.launch.py                     # ruído normal
+# Gazebo + sensores + estimador + EKF + controle (um terminal só)
+ros2 launch sensores trajetoria_8.launch.py
+ros2 launch sensores trajetoria_8.launch.py escala_ruido:=5.0              # mais ruído
+ros2 launch sensores trajetoria_8.launch.py topico_pose:=/pose_estimada    # sem filtro, para comparar
+```
 
 ## Árvore de Transformação
 ```bash

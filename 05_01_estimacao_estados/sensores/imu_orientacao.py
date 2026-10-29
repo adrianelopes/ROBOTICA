@@ -38,7 +38,7 @@ class ImuOrientacao(Node):
         (saida.orientation.x, saida.orientation.y,
          saida.orientation.z, saida.orientation.w) = perturbar_quaternion(
             (q.x, q.y, q.z, q.w), self.desvio, self.rng)
-                # piso de 1 mrad: com escala_ruido = 0 a covariância seria zero e o filtro de Kalman
+        # piso de 1 mrad: com escala_ruido = 0 a covariância seria zero e o filtro de Kalman
         # confiaria cegamente na medida
         d_roll, d_pitch, d_yaw = (max(d, 1e-3) for d in self.desvio)
         saida.orientation_covariance = [
