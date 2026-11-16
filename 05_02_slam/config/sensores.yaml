@@ -1,0 +1,27 @@
+# Parâmetros dos nós que processam os sensores (o ruído do Gazebo está em models/my_robot/sensores.xacro)
+
+imu_orientacao:
+  ros__parameters:
+    use_sim_time: true
+    topico_entrada: /imu/data_bruto
+    topico_saida: /imu/data
+    desvio_orientacao: [0.005, 0.005, 0.01]   # roll, pitch, yaw (rad), antes da escala_ruido
+    semente: -1                               # >= 0: ruído reproduzível
+
+gps_xyz:
+  ros__parameters:
+    use_sim_time: true
+    topico_entrada: /gps/fix
+    topico_saida: /gps/xyz
+    frame_id: odom                # o robô nasce na origem do mundo, então ENU do mundo = odom
+    origem_automatica: false      # true: a origem (0, 0, 0) é a primeira leitura do GPS
+    # Origem do mundo; deve ser igual ao <spherical_coordinates> de worlds/sensores.world
+    origem_lat: -7.1396
+    origem_lon: -34.8450
+    origem_alt: 5.0
+
+scan_para_nuvem:
+  ros__parameters:
+    use_sim_time: true
+    topico_entrada: /scan
+    topico_saida: /scan/points

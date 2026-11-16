@@ -1,0 +1,182 @@
+<?xml version="1.0" ?>
+<!--
+  Cenário simples para SLAM 2D (slam_toolbox): sala fechada de 8 x 6 m com 4 obstáculos.
+  O robô nasce na origem (0, 0), olhando para +x, a 2 m da parede oeste.
+  Paredes e obstáculos têm 1 m de altura para ficarem no plano do lidar.
+  O <spherical_coordinates> foi mantido igual ao de sensores.world para o GPS continuar funcionando.
+-->
+<sdf version="1.6">
+  <world name="slam_simples_world">
+    <!-- Pose exata dos modelos do simulador, sem ruído dos sensores/rodas. -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+        <remapping>model_states:=model_states</remapping>
+      </ros>
+      <update_rate>50.0</update_rate>
+    </plugin>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>-7.1396</latitude_deg>
+      <longitude_deg>-34.8450</longitude_deg>
+      <elevation>5.0</elevation>
+      <heading_deg>180</heading_deg>
+    </spherical_coordinates>
+
+        <!-- Paredes: sala de 8 x 6 m (x de -2 a 6, y de -3 a 3), 1 m de altura. -->
+    <model name="parede_norte">
+      <static>true</static>
+      <pose>2.0 3.05 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>8.2 0.1 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>8.2 0.1 1.0</size></box></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="parede_sul">
+      <static>true</static>
+      <pose>2.0 -3.05 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>8.2 0.1 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>8.2 0.1 1.0</size></box></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="parede_leste">
+      <static>true</static>
+      <pose>6.05 0.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.1 6.0 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 6.0 1.0</size></box></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="parede_oeste">
+      <static>true</static>
+      <pose>-2.05 0.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.1 6.0 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 6.0 1.0</size></box></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Obstáculos espalhados de forma assimétrica: ajudam o casamento de varreduras. -->
+    <model name="caixa_vermelha">
+      <static>true</static>
+      <pose>2.0 1.2 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.6 0.6 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.6 0.6 1.0</size></box></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Red</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="cilindro_verde">
+      <static>true</static>
+      <pose>4.0 -1.5 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><cylinder><radius>0.3</radius><length>1.0</length></cylinder></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><cylinder><radius>0.3</radius><length>1.0</length></cylinder></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Green</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="divisoria_azul">
+      <static>true</static>
+      <pose>3.5 2.0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.1 2.0 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 2.0 1.0</size></box></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Blue</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="caixa_amarela">
+      <static>true</static>
+      <pose>0.5 -2.0 0.5 0 0 0.6</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.8 0.4 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.8 0.4 1.0</size></box></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
