@@ -1,7 +1,7 @@
 image: mapa.pgm
 mode: trinary
 resolution: 0.05000000074505806
-origin: [-2.011276529641429, -3.0330361267229815, 0.0]
+origin: [-2.0134231339119357, -3.0177784679971773, 0.0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.196

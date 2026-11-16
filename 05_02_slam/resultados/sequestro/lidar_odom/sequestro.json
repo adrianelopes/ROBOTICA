@@ -1,0 +1,50 @@
+{
+  "tolerancia_posicao_m": 0.3,
+  "tolerancia_yaw_graus": 10.0,
+  "tempo_estavel_s": 5.0,
+  "estado_final": "recuperado",
+  "sequestros": [
+    {
+      "t": 157.78,
+      "de": [
+        2.953495178820304,
+        0.004020304626897435,
+        0.010483449378782388
+      ],
+      "para": [
+        2.574831182513616,
+        0.001779671947534457,
+        0.012447673792951365
+      ],
+      "distancia_m": 0.3786706253906625,
+      "giro_graus": 0.11254176894843902,
+      "slam_no_sequestro": [
+        2.947753375939184,
+        -0.0031247673613013505,
+        -0.010987312993944549
+      ],
+      "recuperou": true,
+      "t_recuperacao_s": 6.481000000000023,
+      "perdeu_de_novo": 0,
+      "erro_max_posicao_m": 0.38704605900844663,
+      "erro_final_posicao_m": 0.0933161120809925,
+      "erro_final_yaw_graus": 7.594742979936821
+    }
+  ],
+  "mundo": "/home/fernanda/ros2_ws/install/estimacao_estados/share/estimacao_estados/worlds/slam_simples.world",
+  "duracao_sim_s": 195.44000000000003,
+  "mapa_antes": {
+    "celulas_ocupadas": 1742,
+    "celulas_livres": 17764,
+    "erro_medio_paredes_m": 0.033006870659582174,
+    "erro_p95_paredes_m": 0.07575286660179952,
+    "fracao_ocupadas_na_parede": 0.8249138920780712
+  },
+  "mapa_depois": {
+    "celulas_ocupadas": 1777,
+    "celulas_livres": 17768,
+    "erro_medio_paredes_m": 0.03289198342998398,
+    "erro_p95_paredes_m": 0.07575286660179952,
+    "fracao_ocupadas_na_parede": 0.8283624085537422
+  }
+}

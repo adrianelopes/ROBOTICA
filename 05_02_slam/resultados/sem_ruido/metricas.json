@@ -1,31 +1,31 @@
 {
   "cenario": "sem_ruido",
   "descricao": "Sem ruído (lidar e odometria groundtruth)",
-  "mundo": "/home/renanabfreire/ros2_ws/install/estimacao_estados/share/estimacao_estados/worlds/slam_simples.world",
-  "amostras": 643,
-  "duracao_sim_s": 128.4,
-  "duracao_real_s": 296.83156052600043,
-  "comprimento_percurso_m": 31.468217410858728,
+  "mundo": "/home/fernanda/ros2_ws/install/estimacao_estados/share/estimacao_estados/worlds/slam_simples.world",
+  "amostras": 646,
+  "duracao_sim_s": 129.0,
+  "duracao_real_s": 134.80531033800025,
+  "comprimento_percurso_m": 31.444429367018543,
   "slam": {
-    "rmse_posicao_m": 0.014934966578471529,
-    "erro_max_posicao_m": 0.02785710181775529,
-    "erro_final_posicao_m": 0.007790188849923292,
-    "rmse_yaw_graus": 0.17944259858982947,
-    "erro_final_yaw_graus": 0.011582774544154753
+    "rmse_posicao_m": 0.011812865382282125,
+    "erro_max_posicao_m": 0.021150151041138935,
+    "erro_final_posicao_m": 0.0025825208527755004,
+    "rmse_yaw_graus": 0.1490862675922761,
+    "erro_final_yaw_graus": 0.017140248796488605
   },
   "odometria": {
     "rmse_posicao_m": 0.0,
     "erro_max_posicao_m": 0.0,
     "erro_final_posicao_m": 0.0,
-    "rmse_yaw_graus": 1.1233359277954248e-14,
+    "rmse_yaw_graus": 1.1581545631489411e-14,
     "erro_final_yaw_graus": 1.2424041724466862e-17
   },
-  "correcao_map_odom_max_m": 0.0267655536562111,
+  "correcao_map_odom_max_m": 0.024512767529115024,
   "mapa": {
-    "celulas_ocupadas": 903,
-    "celulas_livres": 18091,
-    "erro_medio_paredes_m": 0.018827479599292544,
-    "erro_p95_paredes_m": 0.0419638743946054,
-    "fracao_ocupadas_na_parede": 0.982281284606866
+    "celulas_ocupadas": 627,
+    "celulas_livres": 18258,
+    "erro_medio_paredes_m": 0.0108885367796013,
+    "erro_p95_paredes_m": 0.025049896595813394,
+    "fracao_ocupadas_na_parede": 0.9856459330143541
   }
 }
