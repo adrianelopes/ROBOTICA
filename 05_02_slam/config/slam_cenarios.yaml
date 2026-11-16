@@ -1,0 +1,45 @@
+# Exercício 05_02: comparação do SLAM com e sem ruído (usado pelo slam.launch.py).
+#
+#   cenario:=sem_ruido   lidar sem ruído, odometria = groundtruth
+#   cenario:=lidar       lidar com ruído (ruido_lidar), odometria = groundtruth
+#   cenario:=lidar_odom  lidar com ruído e odometria com erro (ruido_odom)
+
+# Odometria entregue ao SLAM (TF odom -> chassis), calculada a partir da pose exata do
+# Gazebo. Os valores abaixo são os de ruido_odom:=1.0 (o argumento multiplica todos).
+odometria_slam:
+  ros__parameters:
+    use_sim_time: true
+    sigma_avanco: 0.05        # m/sqrt(m): desvio do avanço após 1 m
+    sigma_giro: 0.05          # rad/sqrt(rad): desvio do giro após 1 rad girado
+    sigma_giro_avanco: 0.03   # rad/sqrt(m): desvio da orientação após 1 m reto
+    vies_avanco: 0.01         # erro sistemático: mede 1 % a mais de distância
+    vies_giro: 0.02           # erro sistemático: mede 2 % a mais de giro
+    semente: 42               # mesma semente = mesmo ruído em execuções repetidas
+
+# Percurso fechado pela sala (worlds/slam_simples.world), igual em todos os cenários.
+# Folga mínima de ~0,5 m dos obstáculos e de ~0,7 m das paredes. Termina repassando o
+# começo do trajeto, para o slam_toolbox fechar o laço.
+percurso_sala:
+  ros__parameters:
+    use_sim_time: true
+    v_max: 0.3                # m/s
+    w_max: 0.8                # rad/s
+    tolerancia: 0.08          # m
+    espera_inicial: 3.0       # s (tempo simulado) antes de começar a andar
+    pontos: [ 5.0,  0.0,
+              5.0, -2.3,
+              1.6, -2.3,
+              1.6, -0.9,
+             -1.2, -0.9,
+             -1.2,  2.2,
+              2.8,  2.2,
+              2.8,  0.4,
+              0.0,  0.4,
+              0.0,  0.0,
+              3.0,  0.0]
+
+avaliacao_slam:
+  ros__parameters:
+    use_sim_time: true
+    taxa: 5.0                 # Hz: amostras de groundtruth x SLAM x odometria
+    espera_final: 5.0         # s após o fim do percurso, para o último /map chegar

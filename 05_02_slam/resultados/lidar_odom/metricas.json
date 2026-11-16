@@ -1,0 +1,31 @@
+{
+  "cenario": "lidar_odom",
+  "descricao": "Ruído no lidar 2D e na odometria",
+  "mundo": "/home/renanabfreire/ros2_ws/install/estimacao_estados/share/estimacao_estados/worlds/slam_simples.world",
+  "amostras": 648,
+  "duracao_sim_s": 129.399,
+  "duracao_real_s": 298.3392481689998,
+  "comprimento_percurso_m": 31.469302197348462,
+  "slam": {
+    "rmse_posicao_m": 0.036977786223336855,
+    "erro_max_posicao_m": 0.13064740065441013,
+    "erro_final_posicao_m": 0.022253200011278517,
+    "rmse_yaw_graus": 2.009438441772319,
+    "erro_final_yaw_graus": 0.395132169516733
+  },
+  "odometria": {
+    "rmse_posicao_m": 0.7112813296752419,
+    "erro_max_posicao_m": 1.3473247251340408,
+    "erro_final_posicao_m": 0.5413438999005044,
+    "rmse_yaw_graus": 6.281971831279706,
+    "erro_final_yaw_graus": 5.81360586574257
+  },
+  "correcao_map_odom_max_m": 0.8554614756499827,
+  "mapa": {
+    "celulas_ocupadas": 1768,
+    "celulas_livres": 17771,
+    "erro_medio_paredes_m": 0.029689333361717467,
+    "erro_p95_paredes_m": 0.06322403791879744,
+    "fracao_ocupadas_na_parede": 0.8625565610859729
+  }
+}

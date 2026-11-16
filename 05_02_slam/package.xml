@@ -39,6 +39,10 @@
   <exec_depend>slam_toolbox</exec_depend>
   <!-- salvar o mapa: ros2 run nav2_map_server map_saver_cli -->
   <exec_depend>nav2_map_server</exec_depend>
+  <!-- comparação dos cenários (odometria_slam, percurso_sala, avaliacao_slam, comparar_slam) -->
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
   <!-- dirigir o robô durante o mapeamento -->
   <exec_depend>teleop_twist_keyboard</exec_depend>
   

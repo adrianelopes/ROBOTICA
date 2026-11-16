@@ -17,9 +17,11 @@ def _criar_simulacao(context):
     model_xacro = os.path.join(pkg_share, 'models', 'my_robot', 'model.urdf.xacro')
     escala = LaunchConfiguration('escala_ruido').perform(context)
     ruido_lidar = LaunchConfiguration('ruido_lidar').perform(context)
+    odom_tf_rodas = LaunchConfiguration('odom_tf_rodas').perform(context)
     robot_description = xacro.process_file(
         model_xacro,
-        mappings={'escala_ruido': escala, 'ruido_lidar': ruido_lidar}).toxml()
+        mappings={'escala_ruido': escala, 'ruido_lidar': ruido_lidar,
+                  'odom_tf_rodas': odom_tf_rodas}).toxml()
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -27,6 +29,7 @@ def _criar_simulacao(context):
                          'launch', 'gazebo.launch.py')
         ),
         launch_arguments={'verbose': 'true',
+                          'gui': LaunchConfiguration('gui').perform(context),
                           'world': LaunchConfiguration('world').perform(context)}.items(),
     )
 
@@ -130,5 +133,12 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'publicar_world_odom', default_value='true',
             description='Publica a TF estática world -> odom (use false com SLAM)'),
+        DeclareLaunchArgument(
+            'odom_tf_rodas', default_value='true',
+            description='O diff_drive_controller publica a TF odom -> chassis '
+                        '(false: outro nó publica, como o odometria_slam)'),
+        DeclareLaunchArgument(
+            'gui', default_value='true',
+            description='Abre a janela do Gazebo (false: só o servidor, mais leve)'),
         OpaqueFunction(function=_criar_simulacao),
     ])

@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <robot name="my_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- false: o diff_drive_controller não publica a TF odom -> chassis (usado no SLAM) -->
+  <xacro:arg name="odom_tf_rodas" default="true"/>
   <link name="chassis">
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -148,6 +150,10 @@
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
       <parameters>$(find estimacao_estados)/config/controllers.yaml</parameters>
+      <!-- SLAM (05_02): a TF odom -> chassis vem do nó odometria_slam, não das rodas -->
+      <xacro:unless value="$(arg odom_tf_rodas)">
+        <parameters>$(find estimacao_estados)/config/controllers_sem_tf_odom.yaml</parameters>
+      </xacro:unless>
       <ros>
         <remapping>diff_drive_controller/odom:=odom</remapping>
       </ros>

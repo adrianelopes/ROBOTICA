@@ -1,0 +1,6 @@
+# Carregado DEPOIS de controllers.yaml quando odom_tf_rodas:=false (só este valor muda).
+# O diff_drive_controller continua publicando /odom (rodas), mas a TF odom -> chassis
+# passa a vir do nó odometria_slam (groundtruth com erro controlado), usada pelo SLAM.
+diff_drive_controller:
+  ros__parameters:
+    enable_odom_tf: false

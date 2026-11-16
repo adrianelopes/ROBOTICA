@@ -184,6 +184,10 @@ ele trata o mundo como oeste-sul-cima, e as leituras do GPS saem espelhadas pela
 | `estimacao_estados/cmd_vel_relay.py` | Repassa `/cmd_vel` para o `diff_drive_controller` |
 | `launch/robo_gazebo.launch.py`, `launch/sensores.launch.py` | Simulação e processamento dos sensores |
 | `launch/slam.launch.py`, `config/slam_toolbox.yaml`, `config/slam.rviz` | SLAM 2D com o slam_toolbox |
+| `config/slam_cenarios.yaml` | Erro da odometria, percurso e avaliação dos cenários do SLAM |
+| `estimacao_estados/odometria.py`, `percurso.py`, `mapa.py` | Odometria com erro, seguidor de pontos, métricas de mapa/trajetória (sem ROS) |
+| `estimacao_estados/odometria_slam.py`, `percurso_sala.py`, `avaliacao_slam.py` | Nós do SLAM: TF `odom → chassis`, percurso automático, gravação dos resultados |
+| `estimacao_estados/comparar_slam.py` | Figura e tabela comparando os cenários |
 
 A lógica fica em módulos sem dependência de ROS, para testar sem simulador (mesmo padrão de `manobras.py`/`continuo.py` na prática 03).
 
@@ -216,6 +220,7 @@ colcon test-result --verbose
 | `test_arvore.py` | Leitura do YAML do `tf2`, desenho em texto, raiz só como `parent`, frames faltando |
 | `test_trajetoria.py` | Referência em 8 (fecha a volta, feedforward = derivada), lei de controle, malha fechada simulada com pose ruidosa |
 | `test_estimacao_config.py` | Todo `.py` compila; EKF x tópicos x frames x `controllers.yaml`; controle usa `/odometry/filtered`; launch sobe o EKF |
+| `test_slam_cenarios.py` | Odometria sem ruído = groundtruth, erro independe da taxa, percurso fecha e não encosta em obstáculos, métricas do mapa, os 3 cenários no launch |
 | `test_slam_config.py` | Frames do slam_toolbox (`map`, `odom`, `chassis`), `/scan` e alcance iguais aos do lidar, sala fechada, `slam.launch.py` desliga a TF `world → odom` |
 
 ## Exercício 2.1 (tópico 1): trajetória em 8 com o estado estimado pelo EKF
@@ -301,12 +306,18 @@ não recompilar o slam_toolbox a cada `colcon build`.
 ### Árvore TF com SLAM
 
 ```
-map ──(slam_toolbox)──> odom ──(diff_drive_controller)──> chassis ──(robot_state_publisher)──> lidar_link
+map ──(slam_toolbox)──> odom ──(odometria_slam)──> chassis ──(robot_state_publisher)──> lidar_link
 ```
 
 Nos outros exercícios o `robo_gazebo.launch.py` publica uma TF estática `world → odom`. Com SLAM,
 o pai do `odom` passa a ser o `map`, e um frame só pode ter um pai. Por isso o `slam.launch.py`
 passa `publicar_world_odom:=false`.
+
+O `odom → chassis` vem do nó `odometria_slam` (pose exata do Gazebo + erro controlado, ver
+abaixo), e não do `diff_drive_controller`: o `slam.launch.py` passa `odom_tf_rodas:=false`, que
+carrega `config/controllers_sem_tf_odom.yaml` (`enable_odom_tf: false`) depois do
+`controllers.yaml`. O `/odom` das rodas continua publicado. Com `fonte_odom:=rodas` a TF volta a
+ser a das rodas.
 
 ### Parâmetros (`config/slam_toolbox.yaml`)
 
@@ -323,34 +334,110 @@ com `<- ajustado`:
 | `minimum_travel_distance` / `minimum_travel_heading` | `0.3` / `0.3` | Sala pequena: nova varredura a cada 30 cm ou ~17° |
 | `resolution` | `0.05` | Células de 5 cm |
 
-### Executar
+### Executar: os três cenários da atividade
+
+| `cenario:=` | Lidar 2D | Odometria entregue ao SLAM |
+|---|---|---|
+| `sem_ruido` | sem ruído | groundtruth (`ruido_odom:=0`) |
+| `lidar` | ruído gaussiano 0,03 m | groundtruth (`ruido_odom:=0`) |
+| `lidar_odom` | ruído gaussiano 0,03 m | com erro (`ruido_odom:=1`) |
+
+Em todos o robô faz **sozinho o mesmo percurso** (`percurso_sala`, pontos em
+`config/slam_cenarios.yaml`, ~31 m com volta fechada pela sala). O controle desse percurso usa
+o groundtruth de propósito: o trajeto fica idêntico e só o que o SLAM recebe muda.
 
 ```bash
-# Terminal 1: compilar e subir Gazebo (sala) + slam_toolbox + RViz
 cd ~/ros2_ws
 source /opt/ros/humble/setup.bash
 colcon build --packages-select estimacao_estados
 source install/setup.bash
-ros2 launch estimacao_estados slam.launch.py
+
+ros2 launch estimacao_estados slam.launch.py cenario:=sem_ruido
+ros2 launch estimacao_estados slam.launch.py cenario:=lidar
+ros2 launch estimacao_estados slam.launch.py cenario:=lidar_odom
 ```
+
+O `slam.launch.py` sobe o `/clock` do Gazebo para 1 kHz (`config/gazebo_params_slam.yaml`). No padrão
+(10 Hz) o `now()` em tempo simulado anda em degraus de 100 ms: a TF da odometria fica dessincronizada
+do `/scan` e o SLAM vê erro de odometria (~2 cm, ~1,3°) mesmo no cenário sem ruído.
+
+Cada execução leva ~2 min. Ao fim do percurso o `avaliacao_slam` grava em
+`resultados/<cenario>/`: `mapa.pgm`/`mapa.yaml`, `trajetoria.csv` (groundtruth, SLAM e odometria
+no mesmo instante, 5 Hz) e `metricas.json`, e imprime um resumo. Com `encerrar:=true` tudo fecha
+sozinho depois de salvar; sem ele, feche com Ctrl+C quando quiser.
+
+Depois dos três:
 
 ```bash
-# Terminal 2: dirigir o robô (clique no terminal antes de usar as teclas)
-source /opt/ros/humble/setup.bash && source ~/ros2_ws/install/setup.bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ros2 run estimacao_estados comparar_slam
 ```
 
-Teclas: `i` frente, `j`/`l` girar, `k` parar, `z`/`x` diminuir/aumentar a velocidade. Ande devagar
-(~0,3 m/s) e dê uma volta completa pela sala para o slam_toolbox fechar o laço (*loop closure*).
+gera `resultados/comparacao.png` (mapas com a geometria real e as trajetórias; erro de posição ao
+longo do tempo) e `resultados/comparacao.md` (tabela de métricas).
 
-Argumentos do `slam.launch.py`:
+Sem janelas (mais leve, mesmo resultado):
+
+```bash
+ros2 launch estimacao_estados slam.launch.py cenario:=lidar gui:=false rviz:=false encerrar:=true
+```
+
+#### O que observar na execução (RViz)
+
+* `sem_ruido`: paredes finas (1 célula); a TF `map → odom` quase não se move (só ~2 cm do casamento de
+  varreduras). Efeito de borda: os pontos do lidar caem exatamente sobre as paredes externas (x = 6,0 e
+  y = 3,0) e a grade do slam_toolbox, com número inteiro de células, termina logo antes delas
+  (x = 5,995, y = 2,983). Por isso as paredes **norte e leste somem do mapa** neste cenário. Com ruído,
+  alguns pontos passam da parede, a grade cresce e elas aparecem.
+* `lidar`: paredes mais grossas e "borradas"; pontos soltos no espaço livre. A trajetória ainda é boa,
+  porque a odometria é exata.
+* `lidar_odom`: a seta da odometria (`/odometria_slam`) se afasta do robô; o SLAM corrige com o
+  casamento de varreduras e, ao fechar o laço, o mapa pode "saltar" (`ros2 run tf2_ros tf2_echo map odom`
+  mostra a correção crescendo).
+
+#### Métricas (`metricas.json`)
+
+| Chave | Significado |
+|---|---|
+| `slam.rmse_posicao_m`, `slam.rmse_yaw_graus` | Erro da pose do SLAM (TF `map → chassis`) em relação ao groundtruth |
+| `odometria.*` | O mesmo para a odometria pura (`odom → chassis`): o que o robô saberia sem SLAM |
+| `correcao_map_odom_max_m` | Maior correção que o SLAM aplicou à odometria (`map → odom`) |
+| `mapa.erro_medio_paredes_m`, `mapa.erro_p95_paredes_m` | Distância das células ocupadas até a superfície real mais próxima (geometria lida do `.world`) |
+| `mapa.fracao_ocupadas_na_parede` | Fração das células ocupadas a até 1 célula (5 cm) de uma parede/obstáculo real |
+
+#### Erro da odometria (`config/slam_cenarios.yaml`, valores de `ruido_odom:=1`)
+
+O nó `odometria_slam` integra os incrementos da pose exata do Gazebo (avanço, giro) somando:
+
+| Parâmetro | Valor | Significado |
+|---|---|---|
+| `sigma_avanco` | 0,05 m/√m | desvio do avanço após 1 m (passeio aleatório: cresce com √distância, independe da taxa) |
+| `sigma_giro` | 0,05 rad/√rad | desvio do giro após 1 rad girado |
+| `sigma_giro_avanco` | 0,03 rad/√m | desvio da orientação após 1 m em linha reta |
+| `vies_avanco` | 0,01 | erro sistemático: mede 1 % a mais de distância (raio da roda) |
+| `vies_giro` | 0,02 | erro sistemático: mede 2 % a mais de giro (bitola) |
+| `semente` | 42 | mesma semente = mesmo ruído em repetições |
+
+Para variar a intensidade sem editar o YAML: `ruido_odom:=2.0`, `ruido_lidar:=0.05` etc.
+
+#### Argumentos do `slam.launch.py`
 
 | Argumento | Padrão | Descrição |
 |---|---|---|
+| `cenario` | `sem_ruido` | `sem_ruido`, `lidar` ou `lidar_odom` |
+| `ruido_lidar` | (do cenário) | Desvio-padrão do lidar em m (multiplicado por `escala_ruido`) |
+| `ruido_odom` | (do cenário) | Multiplica o erro de odometria do YAML (0 = groundtruth) |
+| `escala_ruido` | (do cenário) | Multiplica o ruído de todos os sensores (0 no `sem_ruido`, 1 nos outros) |
+| `fonte_odom` | `groundtruth` | `rodas`: usa a odometria real do `diff_drive_controller` (ignora `ruido_odom`) |
+| `percurso` | `true` | `false`: dirija pelo teleop (`ros2 run teleop_twist_keyboard teleop_twist_keyboard`) e salve com Ctrl+C |
+| `avaliar` | `true` | Grava mapa, trajetória e métricas |
+| `saida` | `~/ros2_ws/src/05_02_slam/resultados` | Pasta dos resultados (uma subpasta por cenário) |
+| `encerrar` | `false` | Fecha tudo depois de salvar |
+| `gui` / `rviz` | `true` / `true` | Janela do Gazebo / RViz |
 | `world` | `worlds/slam_simples.world` | Mundo do Gazebo |
-| `escala_ruido` | `1.0` | Multiplica o ruído dos sensores (0 = sem ruído) |
 | `slam_params` | `config/slam_toolbox.yaml` | YAML de parâmetros do slam_toolbox |
-| `rviz` | `true` | Abre o RViz (mapa, lidar, robô e TF) |
+
+Com teleop: teclas `i` frente, `j`/`l` girar, `k` parar, `z`/`x` diminuir/aumentar a velocidade.
+Ande devagar (~0,3 m/s) e dê uma volta completa pela sala para o slam_toolbox fechar o laço.
 
 ### Conferir e salvar o mapa
 

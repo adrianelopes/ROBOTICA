@@ -46,6 +46,10 @@ setup(
             'groundtruth_gazebo = estimacao_estados.groundtruth:main',
             'trajetoria_8 = estimacao_estados.trajetoria_8:main',
             'arvore_tf = estimacao_estados.arvore_tf:main',
+            'odometria_slam = estimacao_estados.odometria_slam:main',
+            'percurso_sala = estimacao_estados.percurso_sala:main',
+            'avaliacao_slam = estimacao_estados.avaliacao_slam:main',
+            'comparar_slam = estimacao_estados.comparar_slam:main',
         ],
     },
 )
