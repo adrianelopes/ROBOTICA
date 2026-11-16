@@ -15,6 +15,11 @@ odometria_slam:
     vies_avanco: 0.01         # erro sistemático: mede 1 % a mais de distância
     vies_giro: 0.02           # erro sistemático: mede 2 % a mais de giro
     semente: 42               # mesma semente = mesmo ruído em execuções repetidas
+    # Robô sequestrado (exercício 3): salto da pose exata maior que isto entre duas
+    # amostras (50 Hz) é teletransporte. As rodas não giram, então a odometria não acompanha.
+    # A 0,3 m/s e 0,8 rad/s o robô anda ~6 mm e gira ~0,02 rad entre amostras. 0 desliga.
+    salto_maximo: 0.25        # m
+    giro_maximo: 0.5          # rad
 
 # Percurso fechado pela sala (worlds/slam_simples.world), igual em todos os cenários.
 # Folga mínima de ~0,5 m dos obstáculos e de ~0,7 m das paredes. Termina repassando o
@@ -43,3 +48,4 @@ avaliacao_slam:
     use_sim_time: true
     taxa: 5.0                 # Hz: amostras de groundtruth x SLAM x odometria
     espera_final: 5.0         # s após o fim do percurso, para o último /map chegar
+

@@ -59,6 +59,10 @@ class PercursoSala(Node):
         if (agora - self.inicio).nanoseconds * 1e-9 < self.espera:
             return
 
+        if self.avisou_fim:
+            # Percurso terminado: para de publicar, liberando o /cmd_vel para o teleop
+            # (exercício 3: mover o robô depois do sequestro).
+            return
         v, w = self.percurso.comando(*self.pose)
         cmd = Twist()
         cmd.linear.x, cmd.angular.z = v, w

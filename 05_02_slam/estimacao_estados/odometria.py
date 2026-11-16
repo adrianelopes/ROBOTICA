@@ -27,10 +27,16 @@ class OdometriaRuidosa:
     * ``sigma_giro`` [rad/sqrt(rad)]: desvio do giro após 1 rad girado;
     * ``sigma_giro_avanco`` [rad/sqrt(m)]: desvio da orientação após 1 m em linha reta;
     * ``vies_avanco`` e ``vies_giro``: erro de escala (0.02 = mede 2 % a mais).
+
+    Robô sequestrado (exercício 3): ``salto_maximo`` [m] e ``giro_maximo`` [rad] são o maior
+    incremento que o robô consegue fazer entre duas poses. Um incremento maior é um
+    teletransporte (o robô foi arrastado no Gazebo): as rodas não giraram, então a odometria
+    fica parada e o salto é contado em ``saltos``. Zero desliga a detecção.
     """
 
     def __init__(self, sigma_avanco=0.0, sigma_giro=0.0, sigma_giro_avanco=0.0,
-                 vies_avanco=0.0, vies_giro=0.0, rng=None):
+                 vies_avanco=0.0, vies_giro=0.0, rng=None, salto_maximo=0.0,
+                 giro_maximo=0.0):
         parametros = (sigma_avanco, sigma_giro, sigma_giro_avanco, vies_avanco, vies_giro)
         if any(p < 0.0 for p in parametros[:3]):
             raise ValueError('desvios-padrão da odometria devem ser >= 0')
@@ -40,17 +46,26 @@ class OdometriaRuidosa:
         self.vies_avanco = vies_avanco
         self.vies_giro = vies_giro
         self.sem_ruido = all(p == 0.0 for p in parametros)
+        if salto_maximo < 0.0 or giro_maximo < 0.0:
+            raise ValueError('salto_maximo e giro_maximo devem ser >= 0')
+        self.salto_maximo = salto_maximo
+        self.giro_maximo = giro_maximo
+        self.saltos = 0
+        self.ultimo_salto = None    # (pose exata antes, pose exata depois)
         self.rng = rng if rng is not None else random.Random()
         self._real = None
         self.pose = None
 
+    def eh_salto(self, distancia, giro):
+        """Incremento grande demais para as rodas: teletransporte."""
+        return ((self.salto_maximo > 0.0 and distancia > self.salto_maximo)
+                or (self.giro_maximo > 0.0 and abs(giro) > self.giro_maximo))
+
     def atualizar(self, x, y, yaw):
         """Recebe a pose exata (x, y, yaw) e devolve a pose da odometria (x, y, yaw)."""
-        if self.sem_ruido:
-            self.pose = (x, y, normalizar_angulo(yaw))
-            return self.pose
+        yaw = normalizar_angulo(yaw)
         if self._real is None:
-            self._real = self.pose = (x, y, normalizar_angulo(yaw))
+            self._real = self.pose = (x, y, yaw)
             return self.pose
 
         x0, y0, yaw0 = self._real
@@ -59,9 +74,17 @@ class OdometriaRuidosa:
         avanco = cos0 * dx + sen0 * dy
         lateral = -sen0 * dx + cos0 * dy
         giro = normalizar_angulo(yaw - yaw0)
-        self._real = (x, y, yaw)
+        anterior, self._real = self._real, (x, y, yaw)
 
         distancia = math.hypot(avanco, lateral)
+        if self.eh_salto(distancia, giro):
+            self.saltos += 1
+            self.ultimo_salto = (anterior, self._real)
+            return self.pose
+        if self.sem_ruido and self.saltos == 0:
+            # odometria groundtruth: a própria pose exata (sem acumular arredondamento)
+            self.pose = self._real
+            return self.pose
         escala = 1.0 + self.vies_avanco
         avanco_medido = avanco * escala + self.rng.gauss(
             0.0, self.sigma_avanco * math.sqrt(distancia))

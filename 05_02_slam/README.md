@@ -32,9 +32,15 @@ Este repositório é uma pasta de pacotes. Coloque-o em `src/` de um workspace:
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 git clone <url-deste-repositorio> ROBOTICA      # ou copie a pasta
 cd ~/ros2_ws
-colcon build --packages-select estimacao_estados
+colcon build --base-paths src/05_02_slam --packages-select estimacao_estados
 source install/setup.bash
 ```
+
+> **Por que `--base-paths src/05_02_slam`?** As pastas `05_01_estimacao_estados` e
+> `05_02_slam` têm um pacote com o mesmo nome (`estimacao_estados`), e o colcon recusa nomes
+> repetidos (`Duplicate package names not supported`) mesmo com `--packages-select`. O
+> `--base-paths` faz o colcon procurar pacotes só na pasta desta atividade. A 05_02 contém
+> tudo da 05_01, então compilar esta pasta basta.
 
 ## Executar
 
@@ -204,8 +210,8 @@ Pelo colcon (inclui flake8 e pep257):
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-select estimacao_estados
-colcon test --packages-select estimacao_estados --event-handlers console_direct+
+colcon build --base-paths src/05_02_slam --packages-select estimacao_estados
+colcon test --base-paths src/05_02_slam --packages-select estimacao_estados --event-handlers console_direct+
 colcon test-result --verbose
 ```
 
@@ -251,7 +257,7 @@ No PlotJuggler, assine `/groundtruth/odom`, `/pose_estimada`, `/odometry/filtere
 
 ```bash
 python3 -m pip install simple-pid
-cd ~/ros2_ws && colcon build --packages-select estimacao_estados && source install/setup.bash
+cd ~/ros2_ws && colcon build --base-paths src/05_02_slam --packages-select estimacao_estados && source install/setup.bash
 source /usr/share/gazebo/setup.bash
 
 # Gazebo + sensores + estimador + EKF + controle (um terminal só)
@@ -283,9 +289,12 @@ git clone -b humble https://github.com/SteveMacenski/slam_toolbox.git
 cd ~/ros2_ws
 rosdep install --from-paths src/slam_toolbox --ignore-src -y
 source /opt/ros/humble/setup.bash
-MAKEFLAGS="-j2" colcon build --packages-select slam_toolbox \
+MAKEFLAGS="-j2" colcon build --base-paths src/slam_toolbox --packages-select slam_toolbox \
   --executor sequential --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
+
+> **Alternativa sem compilar:** `sudo apt install ros-humble-slam-toolbox` instala a mesma
+> branch `humble` já compilada (em `/opt/ros/humble`). Funciona igual para os exercícios.
 
 > **Computador travando ao compilar?** Por padrão o `colcon` compila um arquivo C++ por núcleo
 > ao mesmo tempo, e cada arquivo do slam_toolbox (Karto/Ceres) usa 1 a 1,5 GB de RAM. Com 8 GB
@@ -349,7 +358,7 @@ o groundtruth de propósito: o trajeto fica idêntico e só o que o SLAM recebe 
 ```bash
 cd ~/ros2_ws
 source /opt/ros/humble/setup.bash
-colcon build --packages-select estimacao_estados
+colcon build --base-paths src/05_02_slam --packages-select estimacao_estados
 source install/setup.bash
 
 ros2 launch estimacao_estados slam.launch.py cenario:=sem_ruido
@@ -453,21 +462,73 @@ ros2 run nav2_map_server map_saver_cli -f ~/ros2_ws/src/05_02_slam/mapa_sala
 O `map_saver_cli` grava `mapa_sala.pgm` (imagem) e `mapa_sala.yaml` (resolução e origem). Também dá
 para salvar pelo painel **SlamToolboxPlugin** no RViz (*Save Map*).
 
+## Exercício 3: robô sequestrado
+
+Usa o próprio `slam.launch.py` no cenário com ruído no lidar e na odometria. Só duas coisas
+mudaram no código para o experimento fazer sentido:
+
+* **A odometria não acompanha o teletransporte.** O `odometria_slam` integra os incrementos
+  da pose exata do Gazebo, então sem cuidado o arrasto entraria como um movimento de metros
+  e o SLAM nunca ficaria perdido. Um salto maior que `salto_maximo` (0,25 m) ou
+  `giro_maximo` (0,5 rad) entre duas amostras (50 Hz) agora é ignorado, como numa odometria
+  de rodas real (as rodas não giraram). O terminal mostra `Salto da pose exata ...`.
+* **O `percurso_sala` para de publicar no `/cmd_vel` ao terminar**, para o teleop funcionar.
+
+```bash
+ros2 launch estimacao_estados slam.launch.py cenario:=lidar_odom
+```
+
+1. Espere `percurso concluído` no terminal (mapa construído, robô parado em ~(3, 0)).
+2. Pause o Gazebo (botão ▶/❚❚ na barra inferior).
+3. *Translation Mode* (tecla `T`): arraste o robô para o outro lado da sala, por exemplo
+   **(−1, 2)**, a ~4,5 m. `Esc` volta ao modo de seleção.
+4. Retome a simulação e mova o robô pelo teleop (gire no lugar com `j`/`l`). Parado, o
+   slam_toolbox não processa varreduras novas (`minimum_travel_distance/heading`):
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+5. Verifique a recuperação: no RViz, o lidar (vermelho) volta a encaixar nas paredes do
+   mapa, ou aparecem paredes fantasmas? Compare a pose do SLAM com a posição real do robô
+   no Gazebo:
+
+```bash
+ros2 run tf2_ros tf2_echo map chassis
+```
+
+Para um salto exato (alternativa ao arrasto), num segundo terminal:
+
+```bash
+ros2 service call /pause_physics std_srvs/srv/Empty
+ros2 service call /gazebo/set_entity_state gazebo_msgs/srv/SetEntityState \
+  "{state: {name: my_robot, pose: {position: {x: -1.0, y: 2.0, z: 0.1}, orientation: {w: 1.0}}, reference_frame: world}}"
+ros2 service call /unpause_physics std_srvs/srv/Empty
+```
+
+**Resultado esperado:** com um salto de ~4,4 m, de (3, 0) para (−1, 2), o SLAM **não se
+recuperou**: o erro continuou em ~4,4 m após 90 s, com o robô girando no lugar. Já um salto
+pequeno (~0,4 m) foi corrigido em poucos segundos. O slam_toolbox não tem relocalização
+global: o casamento de varreduras procura só ±0,25 m (`correlation_search_space_dimension`)
+em torno da previsão da odometria, e o fechamento de laço só procura nós a até 3 m da pose
+estimada (`loop_search_maximum_distance`). Relocalização global é o que um filtro de
+partículas como o AMCL oferece.
+
 ### Testes do SLAM
 
 Só os testes de configuração do SLAM, sem ROS nem Gazebo:
 
 ```bash
 cd ~/ros2_ws/src/05_02_slam
-python3 -m pytest test/test_slam_config.py -v
+python3 -m pytest test/test_slam_config.py test/test_slam_cenarios.py -v
 ```
 
 Todos os testes do pacote, pelo colcon:
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-select estimacao_estados
-colcon test --packages-select estimacao_estados
+colcon build --base-paths src/05_02_slam --packages-select estimacao_estados
+colcon test --base-paths src/05_02_slam --packages-select estimacao_estados
 colcon test-result --verbose
 ```
 

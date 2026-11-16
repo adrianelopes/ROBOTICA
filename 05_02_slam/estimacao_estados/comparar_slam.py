@@ -25,6 +25,23 @@ COR_SLAM, COR_ODOM, COR_MUNDO = '#2a78d6', '#eb6834', '#1baf7a'
 TINTA, TINTA_2, SUPERFICIE = '#0b0b0b', '#52514e', '#fcfcfb'
 
 
+def mundo_existente(caminho=None):
+    """
+    Caminho de um .world que existe neste computador.
+
+    O .world gravado no metricas.json pode ser o caminho de outro computador (os
+    resultados foram gerados por outra pessoa do grupo): nesse caso usa o do pacote.
+    """
+    if caminho and Path(caminho).exists():
+        return Path(caminho)
+    local = Path(__file__).resolve().parents[1] / 'worlds' / 'slam_simples.world'
+    if local.exists():
+        return local
+    from ament_index_python.packages import get_package_share_directory
+    return Path(get_package_share_directory('estimacao_estados')) / 'worlds' / \
+        'slam_simples.world'
+
+
 def ler_execucao(pasta):
     pasta = Path(pasta)
     metricas = json.loads((pasta / 'metricas.json').read_text(encoding='utf-8'))
@@ -165,11 +182,7 @@ def main(args=None):
 
     mundo = opcoes.mundo or next(
         (e['metricas'].get('mundo') for e in execucoes if e['metricas'].get('mundo')), None)
-    if mundo is None:
-        from ament_index_python.packages import get_package_share_directory
-        mundo = Path(get_package_share_directory('estimacao_estados')) / 'worlds' / \
-            'slam_simples.world'
-    formas = mapa.ler_mundo(mundo)
+    formas = mapa.ler_mundo(mundo_existente(mundo))
 
     png = Path(opcoes.saida) if opcoes.saida else pastas[0].parent / 'comparacao.png'
     figura(execucoes, formas, png)

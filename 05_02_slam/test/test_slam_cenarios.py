@@ -73,6 +73,16 @@ def test_mesma_semente_mesmo_ruido():
     assert rodar() == rodar()
 
 
+def test_teletransporte_nao_entra_na_odometria():
+    """Exercício 3: arrastar o robô no Gazebo não gira as rodas; andar normalmente não é salto."""
+    odom = OdometriaRuidosa(salto_maximo=0.25, giro_maximo=0.5)
+    for x in np.linspace(0.0, 1.0, 51):          # 1 m a 50 amostras/m
+        odom.atualizar(x, 0.0, 0.0)
+    assert odom.saltos == 0 and odom.pose == pytest.approx((1.0, 0.0, 0.0))
+    odom.atualizar(-1.0, 2.0, 0.0)               # sequestro
+    assert odom.saltos == 1 and odom.pose == pytest.approx((1.0, 0.0, 0.0))
+
+
 def test_desvio_negativo_e_rejeitado():
     with pytest.raises(ValueError):
         OdometriaRuidosa(sigma_avanco=-0.1)

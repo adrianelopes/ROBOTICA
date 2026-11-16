@@ -4,6 +4,10 @@ Odometria para o SLAM: pose exata do Gazebo com erro controlado -> TF odom -> ch
 Substitui a TF do diff_drive_controller (o slam.launch.py desliga ``enable_odom_tf`` dele)
 para que o erro da odometria seja uma variável do experimento:
 ``escala: 0`` = odometria groundtruth; ``escala: 1`` = valores de ``config/slam_cenarios.yaml``.
+
+Robô sequestrado (exercício 3): um salto da pose exata maior que ``salto_maximo`` (m) ou
+``giro_maximo`` (rad) entre duas mensagens é o robô sendo arrastado no Gazebo. Como as
+rodas não giraram, a odometria não acompanha o salto (como uma odometria de rodas real).
 """
 
 import random
@@ -32,8 +36,13 @@ class OdometriaSlam(Node):
         nomes = ('sigma_avanco', 'sigma_giro', 'sigma_giro_avanco', 'vies_avanco', 'vies_giro')
         base = {n: float(self.declare_parameter(n, 0.0).value) for n in nomes}
 
+        salto = float(self.declare_parameter('salto_maximo', 0.25).value)
+        giro = float(self.declare_parameter('giro_maximo', 0.5).value)
+
         self.odometria = OdometriaRuidosa(
-            **{n: escala * v for n, v in base.items()}, rng=random.Random(semente))
+            **{n: escala * v for n, v in base.items()}, rng=random.Random(semente),
+            salto_maximo=salto, giro_maximo=giro)
+        self.saltos_avisados = 0
         self.tf = TransformBroadcaster(self)
         self.pub = self.create_publisher(Odometry, saida, 10)
         self.create_subscription(Odometry, entrada, self._callback, 10)
@@ -50,6 +59,12 @@ class OdometriaSlam(Node):
         q = msg.pose.pose.orientation
         _, _, yaw = quaternion_para_rpy(q.x, q.y, q.z, q.w)
         x, y, yaw = self.odometria.atualizar(p.x, p.y, yaw)
+        if self.odometria.saltos > self.saltos_avisados:
+            self.saltos_avisados = self.odometria.saltos
+            (xa, ya, _), (xd, yd, _) = self.odometria.ultimo_salto
+            self.get_logger().warning(
+                f'Salto da pose exata ({xa:.2f}, {ya:.2f}) -> ({xd:.2f}, {yd:.2f}): robô '
+                'sequestrado. As rodas não giraram, a odometria não acompanha o salto.')
         qx, qy, qz, qw = rpy_para_quaternion(0.0, 0.0, yaw)
 
         tf = TransformStamped()
